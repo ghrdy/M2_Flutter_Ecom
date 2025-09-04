@@ -191,14 +191,33 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(_product!.name),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        title: Text(
+          _product!.name,
+          style: TextStyle(
+            color: Colors.grey[800],
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.3,
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.grey[800]),
+        surfaceTintColor: Colors.white,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () => context.go('/cart'),
+          Container(
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.shopping_cart_outlined, color: Colors.grey[700]),
+              onPressed: () => context.go('/cart'),
+            ),
           ),
         ],
       ),
@@ -210,43 +229,41 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             Container(
               height: 300,
               width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-              ),
+              color: Colors.grey[50],
               child: _product!.imageUrl.isNotEmpty
                   ? Image.network(
                       _product!.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) {
                         return Container(
-                          color: Colors.grey[300],
-                          child: const Icon(
-                            Icons.image_not_supported,
-                            size: 100,
-                            color: Colors.grey,
+                          color: Colors.grey[100],
+                          child: Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 80,
+                            color: Colors.grey[400],
                           ),
                         );
                       },
                     )
                   : Container(
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.image,
-                        size: 100,
-                        color: Colors.grey,
+                      color: Colors.grey[100],
+                      child: Icon(
+                        Icons.image_outlined,
+                        size: 80,
+                        color: Colors.grey[400],
                       ),
                     ),
             ),
 
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Nom et prix
                   Text(
                     _product!.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -282,83 +299,105 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 16),
 
                   // Description
-                  const Text(
+                  Text(
                     'Description',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[900],
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     _product!.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      height: 1.5,
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey[700],
+                      height: 1.6,
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
                   const SizedBox(height: 24),
 
                   // Sélecteur de quantité
-                  const Text(
+                  Text(
                     'Quantité',
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[900],
+                      letterSpacing: -0.3,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: _quantity > 1
-                            ? () => setState(() => _quantity--)
-                            : null,
-                        icon: const Icon(Icons.remove),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: _quantity > 1
+                              ? () => setState(() => _quantity--)
+                              : null,
+                          icon: const Icon(Icons.remove),
+                          color: Colors.grey[600],
+                          iconSize: 18,
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: Text(
-                          _quantity.toString(),
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            _quantity.toString(),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey[800],
+                            ),
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        onPressed: _quantity < _product!.stock
-                            ? () => setState(() => _quantity++)
-                            : null,
-                        icon: const Icon(Icons.add),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Colors.grey[200],
+                        IconButton(
+                          onPressed: _quantity < _product!.stock
+                              ? () => setState(() => _quantity++)
+                              : null,
+                          icon: const Icon(Icons.add),
+                          color: Colors.grey[600],
+                          iconSize: 18,
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 24),
 
                   // Bouton ajouter au panier
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: ElevatedButton(
                       onPressed: _product!.isAvailable && _product!.stock > 0
                           ? _addToCart
                           : null,
-                      icon: const Icon(Icons.add_shopping_cart),
-                      label: Text(
+                      child: Text(
                         _product!.isAvailable
                             ? 'Ajouter au panier - ${(_product!.price * _quantity).toStringAsFixed(2)} €'
                             : 'Produit indisponible',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: -0.2,
+                        ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: _product!.isAvailable && _product!.stock > 0
+                            ? Colors.grey[800]
+                            : Colors.grey[300],
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
+                        elevation: 0,
                       ),
                     ),
                   ),

@@ -182,15 +182,34 @@ class _CatalogScreenState extends State<CatalogScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Catalogue'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+        title: Text(
+          'Catalogue',
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
+            color: Colors.grey[800],
+            letterSpacing: -0.3,
+          ),
+        ),
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.white,
+        iconTheme: IconThemeData(color: Colors.grey[800]),
+        centerTitle: true,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            onPressed: () => context.go('/cart'),
+          Container(
+            margin: const EdgeInsets.only(right: 16),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.grey[300]!),
+            ),
+            child: IconButton(
+              icon: Icon(Icons.shopping_cart_outlined, color: Colors.grey[700]),
+              onPressed: () => context.go('/cart'),
+            ),
           ),
         ],
       ),
@@ -198,29 +217,47 @@ class _CatalogScreenState extends State<CatalogScreen> {
         children: [
           // Barre de recherche et filtres
           Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.grey[100],
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.grey[50],
+              border: Border(
+                bottom: BorderSide(color: Colors.grey[200]!),
+              ),
+            ),
             child: Column(
               children: [
                 // Barre de recherche
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Rechercher un produit...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: BorderSide.none,
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                      width: 1,
                     ),
-                    filled: true,
-                    fillColor: Colors.white,
                   ),
-                  onChanged: (value) => _filterProducts(),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Rechercher un produit...',
+                      hintStyle: TextStyle(color: Colors.grey[500]),
+                      prefixIcon: Icon(
+                        Icons.search_rounded,
+                        color: Colors.grey[500],
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 16,
+                      ),
+                    ),
+                    onChanged: (value) => _filterProducts(),
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 // Filtres par catégorie
                 SizedBox(
-                  height: 40,
+                  height: 45,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
                     itemCount: _categories.length,
@@ -229,19 +266,35 @@ class _CatalogScreenState extends State<CatalogScreen> {
                       final isSelected = _selectedCategory == category;
                       
                       return Container(
-                        margin: const EdgeInsets.only(right: 8),
-                        child: FilterChip(
-                          label: Text(category),
-                          selected: isSelected,
-                          onSelected: (selected) {
+                        margin: const EdgeInsets.only(right: 12),
+                        child: GestureDetector(
+                          onTap: () {
                             setState(() {
                               _selectedCategory = category;
                             });
                             _filterProducts();
                           },
-                          backgroundColor: Colors.white,
-                          selectedColor: Colors.blue[100],
-                          checkmarkColor: Colors.blue,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected ? Colors.grey[800] : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: isSelected ? Colors.grey[800]! : Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Text(
+                              category,
+                              style: TextStyle(
+                                color: isSelected ? Colors.white : Colors.grey[700],
+                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     },
@@ -254,35 +307,54 @@ class _CatalogScreenState extends State<CatalogScreen> {
           // Liste des produits
           Expanded(
             child: _isLoading
-                ? const ShimmerLoading()
+                ? const Padding(
+                    padding: EdgeInsets.all(20),
+                    child: ShimmerLoading(),
+                  )
                 : _filteredProducts.isEmpty
-                    ? const Center(
+                    ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(
-                              Icons.search_off,
-                              size: 64,
-                              color: Colors.grey,
+                            Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[100],
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              child: Icon(
+                                Icons.search_off_rounded,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
                             ),
-                            SizedBox(height: 16),
+                            const SizedBox(height: 24),
                             Text(
                               'Aucun produit trouvé',
                               style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Essayez avec d\'autres mots-clés',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[500],
                               ),
                             ),
                           ],
                         ),
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(20),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 0.75,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
                         ),
                         itemCount: _filteredProducts.length,
                         itemBuilder: (context, index) {

@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import '../models/product.dart';
-import '../services/product_service.dart';
 import '../services/cart_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
@@ -15,24 +14,43 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  final ProductService _productService = ProductService();
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final CartService _cartService = CartService();
   
   List<Product> _featuredProducts = [];
   bool _isLoading = true;
+  AnimationController? _animationController;
+  Animation<double>? _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
     _loadFeaturedProducts();
     _cartService.loadCart();
   }
 
+  void _initializeAnimations() {
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController!, curve: Curves.easeInOut),
+    );
+    _animationController!.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController?.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadFeaturedProducts() async {
     try {
-      // Simulation avec produits d'exemple pour éviter les problèmes Firebase
-      await Future.delayed(const Duration(milliseconds: 1000));
+      // Simulation avec produits d'exemple
+      await Future.delayed(const Duration(milliseconds: 1200));
       
       _featuredProducts = [
         Product(
@@ -98,7 +116,11 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (_) {}
-    await FirebaseAuth.instance.signOut();
+    
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {}
+    
     if (mounted) {
       context.go('/login');
     }
@@ -106,264 +128,306 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final user = FirebaseAuth.instance.currentUser;
-    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Boutique'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        actions: [
-          // Bouton panier
-          Stack(
-            children: [
-              IconButton(
-                onPressed: () => context.go('/cart'),
-                icon: const Icon(Icons.shopping_cart),
-                tooltip: 'Panier',
-              ),
-              if (_cartService.itemCount > 0)
-                Positioned(
-                  right: 8,
-                  top: 8,
-                  child: Container(
-                    padding: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
-                    child: Text(
-                      _cartService.itemCount.toString(),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          // Menu utilisateur
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              if (value == 'logout') {
-                _signOut();
-              }
-            },
-            itemBuilder: (context) => [
-              PopupMenuItem(
-                value: 'logout',
-                child: const Row(
-                  children: [
-                    Icon(Icons.logout),
-                    SizedBox(width: 8),
-                    Text('Se déconnecter'),
-                  ],
-                ),
-              ),
-            ],
-            child: CircleAvatar(
-              backgroundColor: Colors.white,
-              child: user?.photoURL != null
-                  ? ClipOval(
-                      child: Image.network(
-                        user!.photoURL!,
-                        width: 32,
-                        height: 32,
-                        fit: BoxFit.cover,
-                      ),
-                    )
-                  : const Icon(
-                      Icons.person,
-                      color: Colors.blue,
-                    ),
+      body: CustomScrollView(
+        slivers: [
+          // App Bar moderne avec gradient
+          SliverAppBar(
+            expandedHeight: 280,
+            floating: false,
+            pinned: true,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                        decoration: const BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black12,
+              offset: Offset(0, 2),
+              blurRadius: 8,
             ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Section de bienvenue
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(30),
-                  bottomRight: Radius.circular(30),
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Bonjour${user?.displayName != null ? ', ${user!.displayName}' : ''} !',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Découvrez nos produits tendance',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.white70,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Boutons de navigation rapide
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _buildQuickActionButton(
-                      icon: Icons.store,
-                      label: 'Catalogue',
-                      onTap: () => context.go('/catalog'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickActionButton(
-                      icon: Icons.shopping_cart,
-                      label: 'Panier',
-                      onTap: () => context.go('/cart'),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildQuickActionButton(
-                      icon: Icons.receipt_long,
-                      label: 'Commandes',
-                      onTap: () => context.go('/orders'),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 32),
-            
-            // Section produits mis en avant
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Produits mis en avant',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () => context.go('/catalog'),
-                    child: const Text('Voir tout'),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Liste des produits
-            _isLoading
-                ? const ProductListShimmer(itemCount: 4)
-                : _featuredProducts.isEmpty
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(32),
-                          child: Column(
+          ],
+        ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: FadeTransition(
+                      opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                size: 64,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 16),
-                              Text(
-                                'Aucun produit mis en avant',
+                              const Text(
+                                '🛍️ ShopApp',
                                 style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
+                                  color: Colors.black87,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: -0.5,
                                 ),
+                              ),
+                              Row(
+                                children: [
+                                  _buildHeaderButton(
+                                    icon: Icons.shopping_cart_outlined,
+                                    onPressed: () => context.go('/cart'),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  _buildHeaderButton(
+                                    icon: Icons.logout,
+                                    onPressed: _signOut,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
+                          const Spacer(),
+                          const Text(
+                            'Découvrez',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w300,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const Text(
+                            'nos produits',
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 36,
+                              fontWeight: FontWeight.w600,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Technologie de pointe et design exceptionnel',
+                            style: TextStyle(
+                              color: Colors.grey,
+                              fontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // Boutons de navigation rapide
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickActionCard(
+                        icon: Icons.grid_view_rounded,
+                        title: 'Catalogue',
+                        subtitle: 'Voir tous nos produits',
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFF11998e), Color(0xFF38ef7d)],
                         ),
-                      )
-                    : SizedBox(
-                        height: 300,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          itemCount: _featuredProducts.length,
-                          itemBuilder: (context, index) {
-                            final product = _featuredProducts[index];
-                            return SizedBox(
-                              width: 200,
-                              child: ProductCard(product: product),
-                            );
-                          },
+                        onTap: () => context.go('/catalog'),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildQuickActionCard(
+                        icon: Icons.favorite_outline_rounded,
+                        title: 'Favoris',
+                        subtitle: 'Vos coups de cœur',
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFf093fb), Color(0xFFf5576c)],
+                        ),
+                        onTap: () => context.go('/catalog'),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Section produits mis en avant
+          SliverToBoxAdapter(
+            child: FadeTransition(
+              opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Produits tendance',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2d3436),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () => context.go('/catalog'),
+                      child: const Text(
+                        'Voir tout',
+                        style: TextStyle(
+                          color: Color(0xFF667eea),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-            
-            const SizedBox(height: 32),
-          ],
-        ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // Grille de produits
+          _isLoading
+              ? const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(20),
+                    child: ShimmerLoading(),
+                  ),
+                )
+              : SliverPadding(
+                  padding: const EdgeInsets.all(20),
+                  sliver: SliverGrid(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      childAspectRatio: 0.75,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        if (index >= _featuredProducts.length) return null;
+                        final product = _featuredProducts[index];
+                        return FadeTransition(
+                          opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                          child: ProductCard(
+                            product: product,
+                            onTap: () => context.go('/product/${product.id}'),
+                            onAddToCart: () async {
+                              await _cartService.addItem(product, 1);
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${product.name} ajouté au panier'),
+                                    backgroundColor: Colors.green,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    action: SnackBarAction(
+                                      label: 'Voir',
+                                      textColor: Colors.white,
+                                      onPressed: () => context.go('/cart'),
+                                    ),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                        );
+                      },
+                      childCount: _featuredProducts.length,
+                    ),
+                  ),
+                ),
+
+          // Espacement final
+          const SliverToBoxAdapter(
+            child: SizedBox(height: 40),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildQuickActionButton({
+  Widget _buildHeaderButton({
     required IconData icon,
-    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.grey[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: IconButton(
+        icon: Icon(icon, color: Colors.grey[700]),
+        onPressed: onPressed,
+      ),
+    );
+  }
+
+  Widget _buildQuickActionCard({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Gradient gradient,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        height: 120,
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 20,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(color: Colors.grey[100]!),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(
-              icon,
-              size: 32,
-              color: Colors.blue,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.blue[50],
+                borderRadius: BorderRadius.circular(8),
               ),
-              textAlign: TextAlign.center,
+              child: Icon(
+                icon,
+                color: Colors.blue[600],
+                size: 24,
+              ),
+            ),
+            const Spacer(),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.black87,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.3,
+              ),
+            ),
+            Text(
+              subtitle,
+              style: TextStyle(
+                color: Colors.grey[600],
+                fontSize: 12,
+                fontWeight: FontWeight.w400,
+              ),
             ),
           ],
         ),
