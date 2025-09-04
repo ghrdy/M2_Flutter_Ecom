@@ -7,7 +7,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError('Web is not configured');
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.iOS:
@@ -39,5 +39,14 @@ class DefaultFirebaseOptions {
     iosClientId:
         '987568744743-iohdhqfjq179fafekmocmg8989eg5ph9.apps.googleusercontent.com',
     iosBundleId: 'com.example.ecom',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyD8KjxzAov98WXnSYxFgd-IkRRMdjiSdrM',
+    appId: '1:987568744743:web:c391b24c3723fdfd792102',
+    messagingSenderId: '987568744743',
+    projectId: 'm2flutter-1d466',
+    storageBucket: 'm2flutter-1d466.firebasestorage.app',
+    authDomain: 'm2flutter-1d466.firebaseapp.com',
   );
 }
