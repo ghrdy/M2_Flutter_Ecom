@@ -4,6 +4,7 @@ import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
+import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
 
@@ -16,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final CartService _cartService = CartService();
+  final ProductService _productService = ProductService();
   
   List<Product> _featuredProducts = [];
   bool _isLoading = true;
@@ -49,56 +51,44 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _loadFeaturedProducts() async {
     try {
-      // Simulation avec produits d'exemple
-      await Future.delayed(const Duration(milliseconds: 1200));
+      print('🏠 HOME: Début du chargement des produits...');
       
-      _featuredProducts = [
-        Product(
-          id: '1',
-          name: 'iPhone 15 Pro',
-          description: 'Le dernier iPhone avec puce A17 Pro',
-          price: 1229.0,
-          imageUrl: 'https://images.unsplash.com/photo-1592910061532-63978a8e1bb1?w=500',
-          category: 'Électronique',
-          stock: 10,
-          isAvailable: true,
-          isFeatured: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Product(
-          id: '2',
-          name: 'MacBook Air M2',
-          description: 'Ultra-portable avec puce M2',
-          price: 1499.0,
-          imageUrl: 'https://images.unsplash.com/photo-1541807084-5c52b6b3adef?w=500',
-          category: 'Électronique',
-          stock: 5,
-          isAvailable: true,
-          isFeatured: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-        Product(
-          id: '5',
-          name: 'Casque Audio',
-          description: 'Casque sans fil avec réduction de bruit',
-          price: 299.99,
-          imageUrl: 'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500',
-          category: 'Électronique',
-          stock: 8,
-          isAvailable: true,
-          isFeatured: true,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      ];
+      // D'abord, essayons de récupérer TOUS les produits
+      print('🔍 Tentative de récupération de TOUS les produits...');
+      final allProducts = await _productService.getProducts();
+      print('📦 TOUS les produits: ${allProducts.length}');
+      
+      for (var product in allProducts) {
+        print('📦 - ${product.name} (Featured: ${product.isFeatured})');
+      }
+      
+      // Ensuite les produits featured
+      print('⭐ Tentative de récupération des produits featured...');
+      final featuredProducts = await _productService.getFeaturedProducts();
+      print('⭐ Produits featured: ${featuredProducts.length}');
+      
+      // Si pas de featured, on prend les premiers produits
+      final productsToShow = featuredProducts.isNotEmpty 
+          ? featuredProducts 
+          : allProducts.take(6).toList();
+      
+      print('🏠 HOME: Produits à afficher: ${productsToShow.length}');
+      
+      for (var product in productsToShow) {
+        print('🏠 HOME: - ${product.name} (${product.price}€)');
+      }
       
       setState(() {
+        _featuredProducts = productsToShow;
         _isLoading = false;
       });
-    } catch (e) {
+      
+      print('🏠 HOME: État mis à jour, loading = false');
+    } catch (e, stackTrace) {
+      print('❌ HOME: Erreur lors du chargement des produits: $e');
+      print('📍 HOME: Stack trace: $stackTrace');
       setState(() {
+        _featuredProducts = [];
         _isLoading = false;
       });
       if (mounted) {
@@ -106,6 +96,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           SnackBar(
             content: Text('Erreur lors du chargement: $e'),
             backgroundColor: Colors.red,
+            duration: Duration(seconds: 5),
           ),
         );
       }
@@ -300,9 +291,56 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: ShimmerLoading(),
                   ),
                 )
-              : SliverPadding(
-                  padding: const EdgeInsets.all(20),
-                  sliver: SliverGrid(
+              : _featuredProducts.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.inventory_2_outlined, 
+                                     size: 64, color: Colors.grey),
+                            const SizedBox(height: 16),
+                            const Text(
+                              'Aucun produit trouvé',
+                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Produits: ${_featuredProducts.length}',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            const SizedBox(height: 16),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                ElevatedButton(
+                                  onPressed: () {
+                                    setState(() { _isLoading = true; });
+                                    _loadFeaturedProducts();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                  ),
+                                  child: const Text('🔄 Recharger'),
+                                ),
+                                const SizedBox(width: 10),
+                                TextButton(
+                                  onPressed: () {
+                                    print('🔧 DEBUG: Collection utilisée: produits');
+                                    print('🔧 DEBUG: Firebase connecté: ${_productService.toString()}');
+                                  },
+                                  child: const Text('🔧 Debug'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : SliverPadding(
+                      padding: const EdgeInsets.all(20),
+                      sliver: SliverGrid(
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       childAspectRatio: 0.75,
@@ -382,8 +420,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 120,
-        padding: const EdgeInsets.all(20),
+        height: 100,
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -411,22 +449,31 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 size: 24,
               ),
             ),
-            const Spacer(),
-            Text(
-              title,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.3,
+            const SizedBox(height: 8),
+            Flexible(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  color: Colors.black87,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: -0.3,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Colors.grey[600],
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
+            const SizedBox(height: 2),
+            Flexible(
+              child: Text(
+                subtitle,
+                style: TextStyle(
+                  color: Colors.grey[600],
+                  fontSize: 11,
+                  fontWeight: FontWeight.w400,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

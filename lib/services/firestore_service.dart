@@ -3,21 +3,70 @@ import '../models/product.dart';
 
 class FirestoreService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _productsCollection = 'products';
+  static const String _productsCollection = 'produits';
 
   // Récupérer tous les produits
   static Future<List<Product>> getProducts() async {
     try {
+      print('🔍 FIRESTORE: Début de la récupération des produits...');
+      print('🗄️ FIRESTORE: Projet Firebase: ${_firestore.app.options.projectId}');
+      print('📂 FIRESTORE: Collection: $_productsCollection');
+      
       final QuerySnapshot snapshot = await _firestore
           .collection(_productsCollection)
-          .orderBy('createdAt', descending: true)
-          .get();
+          .get(); // Suppression du orderBy pour éviter les erreurs d'index
 
-      return snapshot.docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
-    } catch (e) {
-      print('Erreur lors de la récupération des produits: $e');
+      print('📊 FIRESTORE: Nombre de documents trouvés: ${snapshot.docs.length}');
+      
+      if (snapshot.docs.isEmpty) {
+        print('⚠️ FIRESTORE: Aucun produit trouvé dans la collection');
+        
+        // Test de connexion de base
+        print('🔧 FIRESTORE: Test de connexion...');
+        final testSnapshot = await _firestore.collection('_test').limit(1).get();
+        print('🔧 FIRESTORE: Test réussi, Firebase est connecté');
+        
+        return [];
+      }
+
+      final products = <Product>[];
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          print('📦 FIRESTORE: Document ${doc.id}');
+          print('📄 FIRESTORE: Champs: ${data.keys.toList()}');
+          print('🏷️ FIRESTORE: name = ${data['name']}');
+          print('💰 FIRESTORE: price = ${data['price']}');
+          print('⭐ FIRESTORE: isFeatured = ${data['isFeatured']}');
+          
+          final product = Product.fromMap(data, doc.id);
+          products.add(product);
+          print('✅ FIRESTORE: Produit ajouté: ${product.name} (Featured: ${product.isFeatured})');
+        } catch (e, stackTrace) {
+          print('❌ FIRESTORE: Erreur lors du parsing du document ${doc.id}: $e');
+          print('📍 FIRESTORE: Stack trace: $stackTrace');
+        }
+      }
+      
+      print('🎉 FIRESTORE: Total de ${products.length} produits récupérés');
+      return products;
+    } catch (e, stackTrace) {
+      print('❌ FIRESTORE: Erreur lors de la récupération des produits: $e');
+      print('🔍 FIRESTORE: Type d\'erreur: ${e.runtimeType}');
+      
+      if (e.toString().contains('permission') || e.toString().contains('denied')) {
+        print('🚫 FIRESTORE: ERREUR DE PERMISSIONS - Vérifiez les règles Firestore !');
+        print('💡 FIRESTORE: Allez dans Firebase Console → Firestore → Règles');
+        print('💡 FIRESTORE: Ajoutez: allow read, write: if true;');
+      } else if (e.toString().contains('not-found')) {
+        print('📂 FIRESTORE: Collection "products" non trouvée');
+      } else if (e.toString().contains('network')) {
+        print('🌐 FIRESTORE: Problème de réseau');
+      } else {
+        print('❓ FIRESTORE: Erreur inconnue');
+      }
+      
+      print('📍 FIRESTORE: Stack trace: $stackTrace');
       return [];
     }
   }
@@ -25,18 +74,47 @@ class FirestoreService {
   // Récupérer les produits mis en avant
   static Future<List<Product>> getFeaturedProducts() async {
     try {
+      print('🌟 FIRESTORE: Récupération des produits mis en avant...');
+      print('🎯 FIRESTORE: Filtre: isFeatured = true');
+      
       final QuerySnapshot snapshot = await _firestore
           .collection(_productsCollection)
           .where('isFeatured', isEqualTo: true)
-          .orderBy('createdAt', descending: true)
           .limit(6)
-          .get();
+          .get(); // Suppression du orderBy pour éviter les erreurs d'index
 
-      return snapshot.docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>, doc.id))
-          .toList();
-    } catch (e) {
-      print('Erreur lors de la récupération des produits mis en avant: $e');
+      print('📊 FIRESTORE: Produits featured trouvés: ${snapshot.docs.length}');
+
+      if (snapshot.docs.isEmpty) {
+        print('⚠️ FIRESTORE: Aucun produit featured trouvé avec isFeatured=true');
+        
+        // Test pour voir tous les produits et leurs valeurs isFeatured
+        print('🔍 FIRESTORE: Vérification des valeurs isFeatured...');
+        final allSnapshot = await _firestore.collection(_productsCollection).get();
+        for (var doc in allSnapshot.docs) {
+          final data = doc.data() as Map<String, dynamic>;
+          print('🔍 FIRESTORE: ${doc.id} -> isFeatured: ${data['isFeatured']} (type: ${data['isFeatured'].runtimeType})');
+        }
+      }
+
+      final products = <Product>[];
+      for (var doc in snapshot.docs) {
+        try {
+          final data = doc.data() as Map<String, dynamic>;
+          final product = Product.fromMap(data, doc.id);
+          products.add(product);
+          print('⭐ FIRESTORE: Produit featured: ${product.name}');
+        } catch (e, stackTrace) {
+          print('❌ FIRESTORE: Erreur lors du parsing du produit featured ${doc.id}: $e');
+          print('📍 FIRESTORE: Stack trace: $stackTrace');
+        }
+      }
+      
+      print('🎉 FIRESTORE: ${products.length} produits featured récupérés');
+      return products;
+    } catch (e, stackTrace) {
+      print('❌ FIRESTORE: Erreur lors de la récupération des produits mis en avant: $e');
+      print('📍 FIRESTORE: Stack trace: $stackTrace');
       return [];
     }
   }

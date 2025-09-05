@@ -42,9 +42,36 @@ class Product {
       rating: (data['rating'] ?? 0.0).toDouble(),
       reviewCount: data['reviewCount'] ?? 0,
       isFeatured: data['isFeatured'] ?? false,
-      createdAt: data['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: data['updatedAt']?.toDate() ?? DateTime.now(),
+      createdAt: _parseDateTime(data['createdAt']),
+      updatedAt: _parseDateTime(data['updatedAt']),
     );
+  }
+
+  static DateTime _parseDateTime(dynamic timestamp) {
+    if (timestamp == null) return DateTime.now();
+    
+    try {
+      // Si c'est un Timestamp Firestore
+      if (timestamp.runtimeType.toString().contains('Timestamp')) {
+        return timestamp.toDate();
+      }
+      // Si c'est déjà un DateTime
+      if (timestamp is DateTime) {
+        return timestamp;
+      }
+      // Si c'est une String ISO
+      if (timestamp is String) {
+        return DateTime.parse(timestamp);
+      }
+      // Si c'est un int (milliseconds depuis epoch)
+      if (timestamp is int) {
+        return DateTime.fromMillisecondsSinceEpoch(timestamp);
+      }
+    } catch (e) {
+      print('Erreur lors du parsing de la date: $e');
+    }
+    
+    return DateTime.now();
   }
 
   Map<String, dynamic> toMap() {
