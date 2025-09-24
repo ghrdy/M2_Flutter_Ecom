@@ -13,7 +13,7 @@ class CheckoutScreen extends StatefulWidget {
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final CartService _cartService = CartService();
   final _formKey = GlobalKey<FormState>();
-  
+
   // Contrôleurs pour les champs de formulaire
   final _emailController = TextEditingController();
   final _nameController = TextEditingController();
@@ -21,7 +21,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _postalCodeController = TextEditingController();
   final _phoneController = TextEditingController();
-  
+
   List<CartItem> _cartItems = [];
   bool _isLoading = true;
   bool _isProcessing = false;
@@ -132,6 +132,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           title: const Text('Commande'),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => context.go('/cart'),
+          ),
         ),
         body: const Center(child: CircularProgressIndicator()),
       );
@@ -143,6 +147,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           title: const Text('Commande'),
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => context.go('/cart'),
+          ),
         ),
         body: const Center(
           child: Column(
@@ -162,6 +170,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         title: const Text('Finaliser la commande'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => context.go('/cart'),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -173,15 +185,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               // Résumé de la commande
               _buildOrderSummary(),
               const SizedBox(height: 24),
-              
+
               // Informations de livraison
               _buildShippingForm(),
               const SizedBox(height: 24),
-              
+
               // Méthode de paiement
               _buildPaymentMethod(),
               const SizedBox(height: 24),
-              
+
               // Total et bouton de commande
               _buildOrderTotal(),
             ],
@@ -201,24 +213,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text(
               'Résumé de la commande',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ..._cartItems.map((item) => Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Text('${item.product.name} x${item.quantity}'),
-                  ),
-                  Text('${item.totalPrice.toStringAsFixed(2)} €'),
-                ],
+            ..._cartItems.map(
+              (item) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text('${item.product.name} x${item.quantity}'),
+                    ),
+                    Text('${item.totalPrice.toStringAsFixed(2)} €'),
+                  ],
+                ),
               ),
-            )),
+            ),
             const Divider(),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -231,7 +242,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(_shippingCost == 0 ? 'Livraison gratuite:' : 'Livraison:'),
-                Text(_shippingCost == 0 ? 'Gratuit' : '${_shippingCost.toStringAsFixed(2)} €'),
+                Text(
+                  _shippingCost == 0
+                      ? 'Gratuit'
+                      : '${_shippingCost.toStringAsFixed(2)} €',
+                ),
               ],
             ),
             const Divider(),
@@ -268,13 +283,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text(
               'Informations de livraison',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(
@@ -290,7 +302,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -310,7 +322,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _phoneController,
               decoration: const InputDecoration(
@@ -327,7 +339,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             TextFormField(
               controller: _addressController,
               decoration: const InputDecoration(
@@ -343,7 +355,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               },
             ),
             const SizedBox(height: 16),
-            
+
             Row(
               children: [
                 Expanded(
@@ -398,13 +410,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           children: [
             const Text(
               'Méthode de paiement',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             RadioListTile<String>(
               title: const Row(
                 children: [
@@ -421,7 +430,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 });
               },
             ),
-            
+
             RadioListTile<String>(
               title: const Row(
                 children: [
@@ -438,7 +447,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 });
               },
             ),
-            
+
             RadioListTile<String>(
               title: const Row(
                 children: [
@@ -475,10 +484,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             children: [
               const Text(
                 'Total à payer:',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               Text(
                 '${_finalTotal.toStringAsFixed(2)} €',
@@ -492,7 +498,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           ),
         ),
         const SizedBox(height: 16),
-        
+
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
@@ -507,7 +513,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     ),
                   )
                 : const Icon(Icons.payment),
-            label: Text(_isProcessing ? 'Traitement...' : 'Confirmer la commande'),
+            label: Text(
+              _isProcessing ? 'Traitement...' : 'Confirmer la commande',
+            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,
               foregroundColor: Colors.white,
@@ -518,15 +526,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             ),
           ),
         ),
-        
+
         const SizedBox(height: 8),
-        
+
         Text(
           'En passant commande, vous acceptez nos conditions générales de vente.',
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
           textAlign: TextAlign.center,
         ),
       ],

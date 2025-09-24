@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
 import '../models/product.dart';
 import '../services/cart_service.dart';
@@ -18,7 +16,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final CartService _cartService = CartService();
   final ProductService _productService = ProductService();
-  
+
   List<Product> _featuredProducts = [];
   bool _isLoading = true;
   AnimationController? _animationController;
@@ -52,37 +50,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   Future<void> _loadFeaturedProducts() async {
     try {
       print('🏠 HOME: Début du chargement des produits...');
-      
+
       // D'abord, essayons de récupérer TOUS les produits
       print('🔍 Tentative de récupération de TOUS les produits...');
       final allProducts = await _productService.getProducts();
       print('📦 TOUS les produits: ${allProducts.length}');
-      
+
       for (var product in allProducts) {
         print('📦 - ${product.name} (Featured: ${product.isFeatured})');
       }
-      
+
       // Ensuite les produits featured
       print('⭐ Tentative de récupération des produits featured...');
       final featuredProducts = await _productService.getFeaturedProducts();
       print('⭐ Produits featured: ${featuredProducts.length}');
-      
+
       // Si pas de featured, on prend les premiers produits
-      final productsToShow = featuredProducts.isNotEmpty 
-          ? featuredProducts 
+      final productsToShow = featuredProducts.isNotEmpty
+          ? featuredProducts
           : allProducts.take(6).toList();
-      
+
       print('🏠 HOME: Produits à afficher: ${productsToShow.length}');
-      
+
       for (var product in productsToShow) {
         print('🏠 HOME: - ${product.name} (${product.price}€)');
       }
-      
+
       setState(() {
         _featuredProducts = productsToShow;
         _isLoading = false;
       });
-      
+
       print('🏠 HOME: État mis à jour, loading = false');
     } catch (e, stackTrace) {
       print('❌ HOME: Erreur lors du chargement des produits: $e');
@@ -103,20 +101,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> _signOut() async {
-    try {
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {}
-    
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (_) {}
-    
-    if (mounted) {
-      context.go('/login');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -131,21 +115,22 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               background: Container(
-                        decoration: const BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              offset: Offset(0, 2),
-              blurRadius: 8,
-            ),
-          ],
-        ),
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      offset: Offset(0, 2),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
                 child: SafeArea(
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: FadeTransition(
-                      opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                      opacity:
+                          _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -169,8 +154,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   ),
                                   const SizedBox(width: 8),
                                   _buildHeaderButton(
-                                    icon: Icons.logout,
-                                    onPressed: _signOut,
+                                    icon: Icons.person_outline,
+                                    onPressed: () => context.go('/settings'),
                                   ),
                                 ],
                               ),
@@ -198,10 +183,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           const SizedBox(height: 8),
                           const Text(
                             'Technologie de pointe et design exceptionnel',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 16,
-                            ),
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
                           ),
                           const SizedBox(height: 20),
                         ],
@@ -292,102 +274,110 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                 )
               : _featuredProducts.isEmpty
-                  ? SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
+              ? SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        const Icon(
+                          Icons.inventory_2_outlined,
+                          size: 64,
+                          color: Colors.grey,
+                        ),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Aucun produit trouvé',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Produits: ${_featuredProducts.length}',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.inventory_2_outlined, 
-                                     size: 64, color: Colors.grey),
-                            const SizedBox(height: 16),
-                            const Text(
-                              'Aucun produit trouvé',
-                              style: TextStyle(fontSize: 16, color: Colors.grey),
+                            ElevatedButton(
+                              onPressed: () {
+                                setState(() {
+                                  _isLoading = true;
+                                });
+                                _loadFeaturedProducts();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blue,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('🔄 Recharger'),
                             ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Produits: ${_featuredProducts.length}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                ElevatedButton(
-                                  onPressed: () {
-                                    setState(() { _isLoading = true; });
-                                    _loadFeaturedProducts();
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                  ),
-                                  child: const Text('🔄 Recharger'),
-                                ),
-                                const SizedBox(width: 10),
-                                TextButton(
-                                  onPressed: () {
-                                    print('🔧 DEBUG: Collection utilisée: produits');
-                                    print('🔧 DEBUG: Firebase connecté: ${_productService.toString()}');
-                                  },
-                                  child: const Text('🔧 Debug'),
-                                ),
-                              ],
+                            const SizedBox(width: 10),
+                            TextButton(
+                              onPressed: () {
+                                print(
+                                  '🔧 DEBUG: Collection utilisée: produits',
+                                );
+                                print(
+                                  '🔧 DEBUG: Firebase connecté: ${_productService.toString()}',
+                                );
+                              },
+                              child: const Text('🔧 Debug'),
                             ),
                           ],
                         ),
-                      ),
-                    )
-                  : SliverPadding(
-                      padding: const EdgeInsets.all(20),
-                      sliver: SliverGrid(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 0.75,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
+                      ],
                     ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        if (index >= _featuredProducts.length) return null;
-                        final product = _featuredProducts[index];
-                        return FadeTransition(
-                          opacity: _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
-                          child: ProductCard(
-                            product: product,
-                            onTap: () => context.go('/product/${product.id}'),
-                            onAddToCart: () async {
-                              await _cartService.addItem(product, 1);
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('${product.name} ajouté au panier'),
-                                    backgroundColor: Colors.green,
-                                    behavior: SnackBarBehavior.floating,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    action: SnackBarAction(
-                                      label: 'Voir',
-                                      textColor: Colors.white,
-                                      onPressed: () => context.go('/cart'),
-                                    ),
+                  ),
+                )
+              : SliverPadding(
+                  padding: const EdgeInsets.all(20),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (index >= _featuredProducts.length) return null;
+                      final product = _featuredProducts[index];
+                      return FadeTransition(
+                        opacity:
+                            _fadeAnimation ?? const AlwaysStoppedAnimation(1.0),
+                        child: ProductCard(
+                          product: product,
+                          onTap: () => context.go('/product/${product.id}'),
+                          onAddToCart: () async {
+                            await _cartService.addItem(product, 1);
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    '${product.name} ajouté au panier',
                                   ),
-                                );
-                              }
-                            },
-                          ),
-                        );
-                      },
-                      childCount: _featuredProducts.length,
-                    ),
+                                  backgroundColor: Colors.green,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  action: SnackBarAction(
+                                    label: 'Voir',
+                                    textColor: Colors.white,
+                                    onPressed: () => context.go('/cart'),
+                                  ),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                      );
+                    }, childCount: _featuredProducts.length),
                   ),
                 ),
 
           // Espacement final
-          const SliverToBoxAdapter(
-            child: SizedBox(height: 40),
-          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),
     );
@@ -421,7 +411,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       onTap: onTap,
       child: Container(
         height: 100,
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
@@ -436,45 +426,42 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
                 color: Colors.blue[50],
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Icon(
-                icon,
-                color: Colors.blue[600],
-                size: 24,
-              ),
+              child: Icon(icon, color: Colors.blue[600], size: 20),
             ),
-            const SizedBox(height: 8),
-            Flexible(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: Colors.black87,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: -0.3,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Flexible(
-              child: Text(
-                subtitle,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 11,
-                  fontWeight: FontWeight.w400,
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontSize: 10,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+              ],
             ),
           ],
         ),

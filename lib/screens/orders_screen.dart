@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -16,31 +17,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => context.go('/home'),
+        ),
       ),
       body: const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.receipt_long,
-              size: 100,
-              color: Colors.grey,
-            ),
+            Icon(Icons.receipt_long, size: 100, color: Colors.grey),
             SizedBox(height: 16),
             Text(
               'Aucune commande',
-              style: TextStyle(
-                fontSize: 20,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 20, color: Colors.grey),
             ),
             SizedBox(height: 8),
             Text(
               'Vos commandes apparaîtront ici',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey),
             ),
           ],
         ),

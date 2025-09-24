@@ -6,12 +6,7 @@ class LoadingWidget extends StatelessWidget {
   final double? height;
   final BorderRadius? borderRadius;
 
-  const LoadingWidget({
-    super.key,
-    this.width,
-    this.height,
-    this.borderRadius,
-  });
+  const LoadingWidget({super.key, this.width, this.height, this.borderRadius});
 
   @override
   Widget build(BuildContext context) {
@@ -102,15 +97,14 @@ class ProductCardShimmer extends StatelessWidget {
 
 class ProductListShimmer extends StatelessWidget {
   final int itemCount;
-  
-  const ProductListShimmer({
-    super.key,
-    this.itemCount = 6,
-  });
+
+  const ProductListShimmer({super.key, this.itemCount = 6});
 
   @override
   Widget build(BuildContext context) {
     return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.all(16),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
@@ -133,6 +127,8 @@ class ShimmerLoading extends StatelessWidget {
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
       child: GridView.builder(
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,

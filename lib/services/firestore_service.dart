@@ -9,23 +9,27 @@ class FirestoreService {
   static Future<List<Product>> getProducts() async {
     try {
       print('🔍 FIRESTORE: Début de la récupération des produits...');
-      print('🗄️ FIRESTORE: Projet Firebase: ${_firestore.app.options.projectId}');
+      print(
+        '🗄️ FIRESTORE: Projet Firebase: ${_firestore.app.options.projectId}',
+      );
       print('📂 FIRESTORE: Collection: $_productsCollection');
-      
+
       final QuerySnapshot snapshot = await _firestore
           .collection(_productsCollection)
           .get(); // Suppression du orderBy pour éviter les erreurs d'index
 
-      print('📊 FIRESTORE: Nombre de documents trouvés: ${snapshot.docs.length}');
-      
+      print(
+        '📊 FIRESTORE: Nombre de documents trouvés: ${snapshot.docs.length}',
+      );
+
       if (snapshot.docs.isEmpty) {
         print('⚠️ FIRESTORE: Aucun produit trouvé dans la collection');
-        
+
         // Test de connexion de base
         print('🔧 FIRESTORE: Test de connexion...');
-        final testSnapshot = await _firestore.collection('_test').limit(1).get();
+        await _firestore.collection('_test').limit(1).get();
         print('🔧 FIRESTORE: Test réussi, Firebase est connecté');
-        
+
         return [];
       }
 
@@ -37,25 +41,49 @@ class FirestoreService {
           print('📄 FIRESTORE: Champs: ${data.keys.toList()}');
           print('🏷️ FIRESTORE: name = ${data['name']}');
           print('💰 FIRESTORE: price = ${data['price']}');
+          print(
+            '📦 FIRESTORE: stock = ${data['stock']} (type: ${data['stock'].runtimeType})',
+          );
           print('⭐ FIRESTORE: isFeatured = ${data['isFeatured']}');
-          
+
+          // Debug spécifique pour le stock
+          if (data['stock'] == null) {
+            print(
+              '🚨 FIRESTORE: ATTENTION - Le stock est NULL dans Firestore pour ${doc.id}',
+            );
+            print(
+              '🔍 FIRESTORE: Tous les champs disponibles: ${data.keys.toList()}',
+            );
+          } else {
+            print(
+              '✅ FIRESTORE: Stock trouvé: ${data['stock']} (type: ${data['stock'].runtimeType})',
+            );
+          }
+
           final product = Product.fromMap(data, doc.id);
           products.add(product);
-          print('✅ FIRESTORE: Produit ajouté: ${product.name} (Featured: ${product.isFeatured})');
+          print(
+            '✅ FIRESTORE: Produit ajouté: ${product.name} (Featured: ${product.isFeatured}, Stock: ${product.stock}, Available: ${product.isAvailable})',
+          );
         } catch (e, stackTrace) {
-          print('❌ FIRESTORE: Erreur lors du parsing du document ${doc.id}: $e');
+          print(
+            '❌ FIRESTORE: Erreur lors du parsing du document ${doc.id}: $e',
+          );
           print('📍 FIRESTORE: Stack trace: $stackTrace');
         }
       }
-      
+
       print('🎉 FIRESTORE: Total de ${products.length} produits récupérés');
       return products;
     } catch (e, stackTrace) {
       print('❌ FIRESTORE: Erreur lors de la récupération des produits: $e');
       print('🔍 FIRESTORE: Type d\'erreur: ${e.runtimeType}');
-      
-      if (e.toString().contains('permission') || e.toString().contains('denied')) {
-        print('🚫 FIRESTORE: ERREUR DE PERMISSIONS - Vérifiez les règles Firestore !');
+
+      if (e.toString().contains('permission') ||
+          e.toString().contains('denied')) {
+        print(
+          '🚫 FIRESTORE: ERREUR DE PERMISSIONS - Vérifiez les règles Firestore !',
+        );
         print('💡 FIRESTORE: Allez dans Firebase Console → Firestore → Règles');
         print('💡 FIRESTORE: Ajoutez: allow read, write: if true;');
       } else if (e.toString().contains('not-found')) {
@@ -65,7 +93,7 @@ class FirestoreService {
       } else {
         print('❓ FIRESTORE: Erreur inconnue');
       }
-      
+
       print('📍 FIRESTORE: Stack trace: $stackTrace');
       return [];
     }
@@ -76,7 +104,7 @@ class FirestoreService {
     try {
       print('🌟 FIRESTORE: Récupération des produits mis en avant...');
       print('🎯 FIRESTORE: Filtre: isFeatured = true');
-      
+
       final QuerySnapshot snapshot = await _firestore
           .collection(_productsCollection)
           .where('isFeatured', isEqualTo: true)
@@ -86,14 +114,20 @@ class FirestoreService {
       print('📊 FIRESTORE: Produits featured trouvés: ${snapshot.docs.length}');
 
       if (snapshot.docs.isEmpty) {
-        print('⚠️ FIRESTORE: Aucun produit featured trouvé avec isFeatured=true');
-        
+        print(
+          '⚠️ FIRESTORE: Aucun produit featured trouvé avec isFeatured=true',
+        );
+
         // Test pour voir tous les produits et leurs valeurs isFeatured
         print('🔍 FIRESTORE: Vérification des valeurs isFeatured...');
-        final allSnapshot = await _firestore.collection(_productsCollection).get();
+        final allSnapshot = await _firestore
+            .collection(_productsCollection)
+            .get();
         for (var doc in allSnapshot.docs) {
           final data = doc.data() as Map<String, dynamic>;
-          print('🔍 FIRESTORE: ${doc.id} -> isFeatured: ${data['isFeatured']} (type: ${data['isFeatured'].runtimeType})');
+          print(
+            '🔍 FIRESTORE: ${doc.id} -> isFeatured: ${data['isFeatured']} (type: ${data['isFeatured'].runtimeType})',
+          );
         }
       }
 
@@ -105,15 +139,19 @@ class FirestoreService {
           products.add(product);
           print('⭐ FIRESTORE: Produit featured: ${product.name}');
         } catch (e, stackTrace) {
-          print('❌ FIRESTORE: Erreur lors du parsing du produit featured ${doc.id}: $e');
+          print(
+            '❌ FIRESTORE: Erreur lors du parsing du produit featured ${doc.id}: $e',
+          );
           print('📍 FIRESTORE: Stack trace: $stackTrace');
         }
       }
-      
+
       print('🎉 FIRESTORE: ${products.length} produits featured récupérés');
       return products;
     } catch (e, stackTrace) {
-      print('❌ FIRESTORE: Erreur lors de la récupération des produits mis en avant: $e');
+      print(
+        '❌ FIRESTORE: Erreur lors de la récupération des produits mis en avant: $e',
+      );
       print('📍 FIRESTORE: Stack trace: $stackTrace');
       return [];
     }
@@ -147,7 +185,10 @@ class FirestoreService {
           .get();
 
       return snapshot.docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .map(
+            (doc) =>
+                Product.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+          )
           .toList();
     } catch (e) {
       print('Erreur lors de la recherche de produits: $e');
@@ -165,7 +206,10 @@ class FirestoreService {
           .get();
 
       return snapshot.docs
-          .map((doc) => Product.fromMap(doc.data() as Map<String, dynamic>, doc.id))
+          .map(
+            (doc) =>
+                Product.fromMap(doc.data() as Map<String, dynamic>, doc.id),
+          )
           .toList();
     } catch (e) {
       print('Erreur lors de la récupération des produits par catégorie: $e');
@@ -224,10 +268,7 @@ class FirestoreService {
   // Supprimer un produit
   static Future<bool> deleteProduct(String id) async {
     try {
-      await _firestore
-          .collection(_productsCollection)
-          .doc(id)
-          .delete();
+      await _firestore.collection(_productsCollection).doc(id).delete();
       return true;
     } catch (e) {
       print('Erreur lors de la suppression du produit: $e');
@@ -255,7 +296,8 @@ class FirestoreService {
           'name': 'iPhone 15 Pro',
           'description': 'Le dernier iPhone avec puce A17 Pro et caméra 48MP',
           'price': 1199.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
           'category': 'Smartphones',
           'stock': 50,
           'rating': 4.8,
@@ -266,9 +308,11 @@ class FirestoreService {
         },
         {
           'name': 'MacBook Pro 16"',
-          'description': 'MacBook Pro avec puce M3 Max et écran Liquid Retina XDR',
+          'description':
+              'MacBook Pro avec puce M3 Max et écran Liquid Retina XDR',
           'price': 2499.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
           'category': 'Ordinateurs',
           'stock': 25,
           'rating': 4.9,
@@ -281,7 +325,8 @@ class FirestoreService {
           'name': 'AirPods Pro 2',
           'description': 'Écouteurs sans fil avec réduction de bruit active',
           'price': 249.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?w=500',
           'category': 'Audio',
           'stock': 100,
           'rating': 4.7,
@@ -292,9 +337,11 @@ class FirestoreService {
         },
         {
           'name': 'iPad Air',
-          'description': 'Tablette polyvalente avec puce M2 et écran Liquid Retina',
+          'description':
+              'Tablette polyvalente avec puce M2 et écran Liquid Retina',
           'price': 599.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500',
           'category': 'Tablettes',
           'stock': 75,
           'rating': 4.6,
@@ -305,9 +352,11 @@ class FirestoreService {
         },
         {
           'name': 'Apple Watch Series 9',
-          'description': 'Montre connectée avec GPS et capteurs de santé avancés',
+          'description':
+              'Montre connectée avec GPS et capteurs de santé avancés',
           'price': 399.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=500',
           'category': 'Montres',
           'stock': 60,
           'rating': 4.5,
@@ -320,7 +369,8 @@ class FirestoreService {
           'name': 'Magic Keyboard',
           'description': 'Clavier sans fil avec rétroéclairage et Touch ID',
           'price': 149.99,
-          'imageUrl': 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500',
+          'imageUrl':
+              'https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500',
           'category': 'Accessoires',
           'stock': 40,
           'rating': 4.4,
@@ -335,7 +385,9 @@ class FirestoreService {
         await _firestore.collection(_productsCollection).add(productData);
       }
 
-      print('Base de données initialisée avec ${sampleProducts.length} produits');
+      print(
+        'Base de données initialisée avec ${sampleProducts.length} produits',
+      );
     } catch (e) {
       print('Erreur lors de l\'initialisation de la base de données: $e');
     }

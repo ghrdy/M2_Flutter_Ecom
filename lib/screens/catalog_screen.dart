@@ -17,7 +17,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
   final CartService _cartService = CartService();
   final ProductService _productService = ProductService();
   final TextEditingController _searchController = TextEditingController();
-  
+
   List<Product> _allProducts = [];
   List<Product> _filteredProducts = [];
   bool _isLoading = true;
@@ -44,13 +44,13 @@ class _CatalogScreenState extends State<CatalogScreen> {
     try {
       // Charger les produits depuis Firestore
       _allProducts = await _productService.getProducts();
-      
+
       // Charger les catégories dynamiquement
       final categories = await _productService.getCategories();
       _categories = ['Tous', ...categories];
-      
+
       _filteredProducts = _allProducts;
-      
+
       setState(() {
         _isLoading = false;
       });
@@ -61,7 +61,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
         _filteredProducts = [];
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -76,10 +76,17 @@ class _CatalogScreenState extends State<CatalogScreen> {
   void _filterProducts() {
     setState(() {
       _filteredProducts = _allProducts.where((product) {
-        final matchesSearch = product.name.toLowerCase().contains(_searchController.text.toLowerCase()) ||
-                             product.description.toLowerCase().contains(_searchController.text.toLowerCase());
-        final matchesCategory = _selectedCategory == 'Tous' || product.category == _selectedCategory;
-        
+        final matchesSearch =
+            product.name.toLowerCase().contains(
+              _searchController.text.toLowerCase(),
+            ) ||
+            product.description.toLowerCase().contains(
+              _searchController.text.toLowerCase(),
+            );
+        final matchesCategory =
+            _selectedCategory == 'Tous' ||
+            product.category == _selectedCategory;
+
         return matchesSearch && matchesCategory;
       }).toList();
     });
@@ -87,7 +94,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
   Future<void> _addToCart(Product product) async {
     await _cartService.addItem(product, 1);
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -123,6 +130,10 @@ class _CatalogScreenState extends State<CatalogScreen> {
         surfaceTintColor: Colors.white,
         iconTheme: IconThemeData(color: Colors.grey[800]),
         centerTitle: true,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.grey[800]),
+          onPressed: () => context.go('/home'),
+        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 16),
@@ -145,9 +156,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.grey[50],
-              border: Border(
-                bottom: BorderSide(color: Colors.grey[200]!),
-              ),
+              border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
             ),
             child: Column(
               children: [
@@ -156,10 +165,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.grey[300]!,
-                      width: 1,
-                    ),
+                    border: Border.all(color: Colors.grey[300]!, width: 1),
                   ),
                   child: TextField(
                     controller: _searchController,
@@ -189,7 +195,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     itemBuilder: (context, index) {
                       final category = _categories[index];
                       final isSelected = _selectedCategory == category;
-                      
+
                       return Container(
                         margin: const EdgeInsets.only(right: 12),
                         child: GestureDetector(
@@ -205,17 +211,25 @@ class _CatalogScreenState extends State<CatalogScreen> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.grey[800] : Colors.grey[100],
+                              color: isSelected
+                                  ? Colors.grey[800]
+                                  : Colors.grey[100],
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: isSelected ? Colors.grey[800]! : Colors.grey[300]!,
+                                color: isSelected
+                                    ? Colors.grey[800]!
+                                    : Colors.grey[300]!,
                               ),
                             ),
                             child: Text(
                               category,
                               style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.grey[700],
-                                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey[700],
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w500,
                                 fontSize: 14,
                               ),
                             ),
@@ -228,7 +242,7 @@ class _CatalogScreenState extends State<CatalogScreen> {
               ],
             ),
           ),
-          
+
           // Liste des produits
           Expanded(
             child: _isLoading
@@ -237,60 +251,61 @@ class _CatalogScreenState extends State<CatalogScreen> {
                     child: ShimmerLoading(),
                   )
                 : _filteredProducts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[100],
-                                borderRadius: BorderRadius.circular(50),
-                              ),
-                              child: Icon(
-                                Icons.search_off_rounded,
-                                size: 64,
-                                color: Colors.grey[400],
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Aucun produit trouvé',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Essayez avec d\'autres mots-clés',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: Colors.grey[100],
+                            borderRadius: BorderRadius.circular(50),
+                          ),
+                          child: Icon(
+                            Icons.search_off_rounded,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
                         ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(20),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        const SizedBox(height: 24),
+                        Text(
+                          'Aucun produit trouvé',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Essayez avec d\'autres mots-clés',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : GridView.builder(
+                    padding: const EdgeInsets.all(20),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 0.75,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
-                        itemCount: _filteredProducts.length,
-                        itemBuilder: (context, index) {
-                          final product = _filteredProducts[index];
-                          return ProductCard(
-                            product: product,
-                            onTap: () => context.go('/product/${product.id}'),
-                            onAddToCart: () => _addToCart(product),
-                          );
-                        },
-                      ),
+                    itemCount: _filteredProducts.length,
+                    itemBuilder: (context, index) {
+                      final product = _filteredProducts[index];
+                      return ProductCard(
+                        product: product,
+                        onTap: () => context.go('/product/${product.id}'),
+                        onAddToCart: () => _addToCart(product),
+                      );
+                    },
+                  ),
           ),
         ],
       ),

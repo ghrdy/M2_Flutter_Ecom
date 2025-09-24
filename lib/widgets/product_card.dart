@@ -17,7 +17,8 @@ class ProductCard extends StatefulWidget {
   State<ProductCard> createState() => _ProductCardState();
 }
 
-class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin {
+class _ProductCardState extends State<ProductCard>
+    with TickerProviderStateMixin {
   late AnimationController _scaleController;
   late AnimationController _buttonController;
   late Animation<double> _scaleAnimation;
@@ -90,7 +91,7 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                   ),
                 ],
               ),
-                              child: ClipRRect(
+              child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,30 +115,35 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                                     child: Image.network(
                                       widget.product.imageUrl,
                                       fit: BoxFit.cover,
-                                      errorBuilder: (context, error, stackTrace) {
-                                        return Container(
-                                          color: Colors.grey[200],
-                                          child: const Icon(
-                                            Icons.image_not_supported_rounded,
-                                            size: 50,
-                                            color: Colors.grey,
-                                          ),
-                                        );
-                                      },
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Container(
-                                          color: Colors.grey[200],
-                                          child: const Center(
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation<Color>(
-                                                Color(0xFF667eea),
+                                      errorBuilder:
+                                          (context, error, stackTrace) {
+                                            return Container(
+                                              color: Colors.grey[200],
+                                              child: const Icon(
+                                                Icons
+                                                    .image_not_supported_rounded,
+                                                size: 50,
+                                                color: Colors.grey,
                                               ),
-                                            ),
-                                          ),
-                                        );
-                                      },
+                                            );
+                                          },
+                                      loadingBuilder:
+                                          (context, child, loadingProgress) {
+                                            if (loadingProgress == null)
+                                              return child;
+                                            return Container(
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Color(0xFF667eea)),
+                                                ),
+                                              ),
+                                            );
+                                          },
                                     ),
                                   )
                                 : Container(
@@ -149,7 +155,7 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                                     ),
                                   ),
                           ),
-                          
+
                           // Badge de stock
                           if (widget.product.stock <= 5)
                             Positioned(
@@ -161,14 +167,14 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: widget.product.stock == 0 
-                                      ? Colors.red 
+                                  color: widget.product.stock == 0
+                                      ? Colors.red
                                       : Colors.orange,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
-                                  widget.product.stock == 0 
-                                      ? 'Épuisé' 
+                                  widget.product.stock == 0
+                                      ? 'Épuisé'
                                       : 'Stock faible',
                                   style: const TextStyle(
                                     color: Colors.white,
@@ -201,12 +207,12 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                         ],
                       ),
                     ),
-                    
+
                     // Informations du produit
                     Expanded(
                       flex: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.fromLTRB(10, 10, 10, 8),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -215,26 +221,28 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                               widget.product.name,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                fontSize: 13,
                                 color: Color(0xFF2d3436),
+                                height: 1.2,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
-                            const SizedBox(height: 4),
-                            
+                            const SizedBox(height: 1),
+
                             // Catégorie
                             Text(
                               widget.product.category,
                               style: TextStyle(
                                 color: Colors.grey[600],
-                                fontSize: 12,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w500,
+                                height: 1.1,
                               ),
                             ),
-                            
+
                             const Spacer(),
-                            
+
                             // Prix et bouton
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -245,11 +253,11 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                                   style: TextStyle(
                                     color: Colors.grey[800],
                                     fontWeight: FontWeight.w700,
-                                    fontSize: 16,
+                                    fontSize: 13,
                                     letterSpacing: -0.3,
                                   ),
                                 ),
-                                
+
                                 // Bouton ajouter au panier
                                 if (widget.onAddToCart != null)
                                   AnimatedBuilder(
@@ -258,34 +266,48 @@ class _ProductCardState extends State<ProductCard> with TickerProviderStateMixin
                                       return Transform.scale(
                                         scale: _buttonAnimation.value,
                                         child: GestureDetector(
-                                          onTap: widget.product.isAvailable && widget.product.stock > 0 
+                                          onTap:
+                                              widget.product.isAvailable &&
+                                                  widget.product.stock > 0
                                               ? () {
-                                                  _buttonController.forward().then((_) {
-                                                    _buttonController.reverse();
-                                                  });
+                                                  _buttonController
+                                                      .forward()
+                                                      .then((_) {
+                                                        _buttonController
+                                                            .reverse();
+                                                      });
                                                   widget.onAddToCart!();
                                                 }
                                               : null,
                                           child: Container(
-                                            width: 40,
-                                            height: 40,
+                                            width: 32,
+                                            height: 32,
                                             decoration: BoxDecoration(
-                                              color: widget.product.isAvailable && widget.product.stock > 0
+                                              color:
+                                                  widget.product.isAvailable &&
+                                                      widget.product.stock > 0
                                                   ? Colors.grey[100]
                                                   : Colors.grey[200],
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(6),
                                               border: Border.all(
-                                                color: widget.product.isAvailable && widget.product.stock > 0
+                                                color:
+                                                    widget
+                                                            .product
+                                                            .isAvailable &&
+                                                        widget.product.stock > 0
                                                     ? Colors.grey[300]!
                                                     : Colors.grey[400]!,
                                               ),
                                             ),
                                             child: Icon(
                                               Icons.add,
-                                              color: widget.product.isAvailable && widget.product.stock > 0
+                                              color:
+                                                  widget.product.isAvailable &&
+                                                      widget.product.stock > 0
                                                   ? Colors.grey[700]
                                                   : Colors.grey[500],
-                                              size: 18,
+                                              size: 14,
                                             ),
                                           ),
                                         ),

@@ -45,7 +45,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _removeItem(CartItem item) async {
     await _cartService.removeItem(item.product.id);
     await _loadCart();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -60,7 +60,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<void> _clearCart() async {
     await _cartService.clearCart();
     await _loadCart();
-    
+
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -94,6 +94,10 @@ class _CartScreenState extends State<CartScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.grey[800]),
         surfaceTintColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.grey[800]),
+          onPressed: () => context.go('/home'),
+        ),
         actions: [
           if (_cartItems.isNotEmpty)
             Container(
@@ -106,44 +110,44 @@ class _CartScreenState extends State<CartScreen> {
               child: IconButton(
                 icon: Icon(Icons.delete_sweep_outlined, color: Colors.red[600]),
                 onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: Text(
-                      'Vider le panier',
-                      style: TextStyle(
-                        color: Colors.grey[800],
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    content: Text(
-                      'Êtes-vous sûr de vouloir vider tout le panier ?',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: Text(
-                          'Annuler',
-                          style: TextStyle(color: Colors.grey[600]),
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: Text(
+                        'Vider le panier',
+                        style: TextStyle(
+                          color: Colors.grey[800],
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                          _clearCart();
-                        },
-                        child: Text(
-                          'Vider',
-                          style: TextStyle(color: Colors.red[600]),
-                        ),
+                      content: Text(
+                        'Êtes-vous sûr de vouloir vider tout le panier ?',
+                        style: TextStyle(color: Colors.grey[700]),
                       ),
-                    ],
-                  ),
-                );
-              },
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(),
+                          child: Text(
+                            'Annuler',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                            _clearCart();
+                          },
+                          child: Text(
+                            'Vider',
+                            style: TextStyle(color: Colors.red[600]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
         ],
       ),
       body: _isLoading
@@ -154,8 +158,8 @@ class _CartScreenState extends State<CartScreen> {
               ),
             )
           : _cartItems.isEmpty
-              ? _buildEmptyCart()
-              : _buildCartContent(),
+          ? _buildEmptyCart()
+          : _buildCartContent(),
       bottomNavigationBar: _cartItems.isNotEmpty ? _buildBottomBar() : null,
     );
   }
@@ -165,11 +169,7 @@ class _CartScreenState extends State<CartScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.shopping_cart_outlined,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 20),
           Text(
             'Votre panier est vide',
@@ -223,9 +223,7 @@ class _CartScreenState extends State<CartScreen> {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.grey[50],
-            border: Border(
-              bottom: BorderSide(color: Colors.grey[200]!),
-            ),
+            border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -250,7 +248,7 @@ class _CartScreenState extends State<CartScreen> {
             ],
           ),
         ),
-        
+
         // Liste des articles
         Expanded(
           child: ListView.builder(
@@ -321,7 +319,7 @@ class _CartScreenState extends State<CartScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            
+
             // Informations du produit
             Expanded(
               child: Column(
@@ -361,7 +359,8 @@ class _CartScreenState extends State<CartScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              onPressed: () => _updateQuantity(item, item.quantity - 1),
+                              onPressed: () =>
+                                  _updateQuantity(item, item.quantity - 1),
                               icon: const Icon(Icons.remove),
                               color: Colors.grey[600],
                               iconSize: 16,
@@ -371,7 +370,9 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
                               child: Text(
                                 item.quantity.toString(),
                                 style: TextStyle(
@@ -382,7 +383,8 @@ class _CartScreenState extends State<CartScreen> {
                               ),
                             ),
                             IconButton(
-                              onPressed: () => _updateQuantity(item, item.quantity + 1),
+                              onPressed: () =>
+                                  _updateQuantity(item, item.quantity + 1),
                               icon: const Icon(Icons.add),
                               color: Colors.grey[600],
                               iconSize: 16,
@@ -394,7 +396,7 @@ class _CartScreenState extends State<CartScreen> {
                           ],
                         ),
                       ),
-                      
+
                       // Prix total et bouton supprimer
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
@@ -442,9 +444,7 @@ class _CartScreenState extends State<CartScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(
-          top: BorderSide(color: Colors.grey[200]!),
-        ),
+        border: Border(top: BorderSide(color: Colors.grey[200]!)),
       ),
       child: SafeArea(
         child: Column(

@@ -1,21 +1,21 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+rimport 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import '../lib/firebase_options.dart';
 
 void main() async {
   print('🔥 Test de connexion Firebase...');
   print('=====================================');
-  
+
   try {
     // Initialiser Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     print('✅ Firebase initialisé avec succès!');
-    
+
     final firestore = FirebaseFirestore.instance;
     print('📱 Projet ID: ${firestore.app.options.projectId}');
-    
+
     // Test 1: Lister toutes les collections
     print('\n🗂️  Test 1: Collections disponibles...');
     try {
@@ -25,19 +25,21 @@ void main() async {
         print('   - ${collection.id}');
       }
     } catch (e) {
-      print('⚠️  Impossible de lister les collections (normal pour le web): $e');
+      print(
+        '⚠️  Impossible de lister les collections (normal pour le web): $e',
+      );
     }
-    
+
     // Test 2: Accéder à la collection products
     print('\n📦 Test 2: Collection "products"...');
     final productsRef = firestore.collection('products');
     final snapshot = await productsRef.get();
-    
+
     print('📊 Nombre de documents dans "products": ${snapshot.docs.length}');
-    
+
     if (snapshot.docs.isEmpty) {
       print('⚠️  La collection "products" est vide!');
-      
+
       // Test 3: Ajouter un produit de test
       print('\n➕ Test 3: Ajout d\'un produit de test...');
       await productsRef.add({
@@ -55,7 +57,7 @@ void main() async {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       print('✅ Produit de test ajouté!');
-      
+
       // Revérifier
       final newSnapshot = await productsRef.get();
       print('📊 Nouveaux documents: ${newSnapshot.docs.length}');
@@ -71,16 +73,15 @@ void main() async {
         print('   ---');
       }
     }
-    
+
     // Test 5: Requête avec filtre
     print('\n⭐ Test 5: Produits featured...');
     final featuredSnapshot = await productsRef
         .where('isFeatured', isEqualTo: true)
         .get();
     print('📊 Produits featured: ${featuredSnapshot.docs.length}');
-    
+
     print('\n🎉 Tests terminés avec succès!');
-    
   } catch (e, stackTrace) {
     print('❌ ERREUR: $e');
     print('📍 Stack trace: $stackTrace');

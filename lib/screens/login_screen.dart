@@ -88,9 +88,41 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _signInWithGoogle() async {
-    // Pour l'instant, on simule une connexion Google
-    // On peut réactiver Google Sign-In plus tard
-    await _signInWithEmail();
+    setState(() {
+      _isLoading = true;
+      _errorText = null;
+    });
+
+    try {
+      // Utiliser l'instance singleton de GoogleSignIn comme dans le commit original
+      final GoogleSignInAccount googleUser = await GoogleSignIn.instance
+          .authenticate();
+      final GoogleSignInAuthentication googleAuth = googleUser.authentication;
+      final credential = GoogleAuthProvider.credential(
+        idToken: googleAuth.idToken,
+      );
+      await FirebaseAuth.instance.signInWithCredential(credential);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Connexion Google réussie !'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        context.go('/home');
+      }
+    } on FirebaseAuthException catch (e) {
+      _errorText = e.message ?? 'Erreur lors de la connexion Google.';
+    } catch (e) {
+      _errorText = 'Erreur lors de la connexion Google: ${e.toString()}';
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -101,24 +133,21 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => context.go('/home'),
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.shopping_bag,
-              size: 80,
-              color: Colors.blue,
-            ),
+            const Icon(Icons.shopping_bag, size: 80, color: Colors.blue),
             const SizedBox(height: 32),
             const Text(
               'Bienvenue dans notre boutique',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -198,12 +227,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   onPressed: _signInWithGoogle,
-                  icon: const Icon(Icons.login),
+                  icon: const Icon(Icons.g_mobiledata, size: 24),
                   label: const Text('Se connecter avec Google'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.black,
                     padding: const EdgeInsets.symmetric(vertical: 16),
+                    side: const BorderSide(color: Colors.grey, width: 1),
                   ),
                 ),
               ),

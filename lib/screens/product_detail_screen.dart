@@ -33,7 +33,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
     try {
       _product = await _productService.getProductById(widget.productId);
-      
+
       setState(() {
         _isLoading = false;
       });
@@ -43,7 +43,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _product = null;
         _isLoading = false;
       });
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -58,7 +58,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Future<void> _addToCart() async {
     if (_product != null) {
       await _cartService.addItem(_product!, _quantity);
-      
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -83,10 +83,12 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         appBar: AppBar(
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => context.go('/catalog'),
+          ),
         ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
+        body: const Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -97,9 +99,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
           backgroundColor: Colors.blue,
           foregroundColor: Colors.white,
         ),
-        body: const Center(
-          child: Text('Produit non trouvé'),
-        ),
+        body: const Center(child: Text('Produit non trouvé')),
       );
     }
 
@@ -119,6 +119,10 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         elevation: 0,
         iconTheme: IconThemeData(color: Colors.grey[800]),
         surfaceTintColor: Colors.white,
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back_ios, color: Colors.grey[800]),
+          onPressed: () => context.go('/catalog'),
+        ),
         actions: [
           Container(
             margin: const EdgeInsets.only(right: 12),
@@ -176,10 +180,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   // Nom et prix
                   Text(
                     _product!.name,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -203,7 +204,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       Text(
                         '${_product!.stock} en stock',
                         style: TextStyle(
-                          color: _product!.stock > 0 ? Colors.green : Colors.red,
+                          color: _product!.stock > 0
+                              ? Colors.green
+                              : Colors.red,
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -302,7 +305,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: _product!.isAvailable && _product!.stock > 0
+                        backgroundColor:
+                            _product!.isAvailable && _product!.stock > 0
                             ? Colors.grey[800]
                             : Colors.grey[300],
                         foregroundColor: Colors.white,

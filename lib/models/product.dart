@@ -37,7 +37,7 @@ class Product {
       price: (data['price'] ?? 0.0).toDouble(),
       imageUrl: data['imageUrl'] ?? '',
       category: data['category'] ?? '',
-      stock: data['stock'] ?? 0,
+      stock: _parseStock(data['stock']),
       isAvailable: data['isAvailable'] ?? true,
       rating: (data['rating'] ?? 0.0).toDouble(),
       reviewCount: data['reviewCount'] ?? 0,
@@ -47,9 +47,45 @@ class Product {
     );
   }
 
+  static int _parseStock(dynamic stock) {
+    print(
+      '🔍 STOCK PARSING: Valeur reçue: $stock (type: ${stock.runtimeType})',
+    );
+
+    if (stock == null) {
+      print('⚠️ STOCK PARSING: Stock est null, retour de 0');
+      return 0;
+    }
+
+    try {
+      if (stock is int) {
+        print('✅ STOCK PARSING: Stock est un int: $stock');
+        return stock;
+      }
+      if (stock is double) {
+        print(
+          '✅ STOCK PARSING: Stock est un double: $stock, conversion en int: ${stock.toInt()}',
+        );
+        return stock.toInt();
+      }
+      if (stock is String) {
+        print(
+          '✅ STOCK PARSING: Stock est une string: $stock, conversion en int: ${int.parse(stock)}',
+        );
+        return int.parse(stock);
+      }
+      print('❌ STOCK PARSING: Type non supporté: ${stock.runtimeType}');
+    } catch (e) {
+      print('❌ STOCK PARSING: Erreur lors du parsing du stock: $e');
+    }
+
+    print('⚠️ STOCK PARSING: Retour de 0 par défaut');
+    return 0;
+  }
+
   static DateTime _parseDateTime(dynamic timestamp) {
     if (timestamp == null) return DateTime.now();
-    
+
     try {
       // Si c'est un Timestamp Firestore
       if (timestamp.runtimeType.toString().contains('Timestamp')) {
@@ -70,7 +106,7 @@ class Product {
     } catch (e) {
       print('Erreur lors du parsing de la date: $e');
     }
-    
+
     return DateTime.now();
   }
 
