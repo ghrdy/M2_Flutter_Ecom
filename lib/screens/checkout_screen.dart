@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
+import '../services/order_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -12,6 +13,7 @@ class CheckoutScreen extends StatefulWidget {
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final CartService _cartService = CartService();
+  final OrderService _orderService = OrderService();
   final _formKey = GlobalKey<FormState>();
 
   // Contrôleurs pour les champs de formulaire
@@ -77,51 +79,135 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       _isProcessing = true;
     });
 
-    // Simulation du traitement de la commande
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      // Simulation du traitement de la commande
+      await Future.delayed(const Duration(seconds: 2));
 
-    // Vider le panier après commande
-    await _cartService.clearCart();
+      // Construire l'adresse complète
+      final shippingAddress =
+          '${_nameController.text}\n'
+          '${_addressController.text}\n'
+          '${_postalCodeController.text} ${_cityController.text}\n'
+          'Tél: ${_phoneController.text}';
 
-    setState(() {
-      _isProcessing = false;
-    });
+      final billingAddress = shippingAddress; // Pour simplifier, même adresse
 
-    if (mounted) {
-      // Afficher la confirmation
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => AlertDialog(
-          title: const Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green),
-              SizedBox(width: 8),
-              Text('Commande confirmée'),
-            ],
+      // Obtenir le nom de la méthode de paiement
+      String paymentMethodName;
+      switch (_selectedPaymentMethod) {
+        case 'card':
+          paymentMethodName = 'Carte bancaire';
+          break;
+        case 'transfer':
+          paymentMethodName = 'Virement bancaire';
+          break;
+        case 'cash':
+          paymentMethodName = 'Paiement à la livraison';
+          break;
+        default:
+          paymentMethodName = 'Non spécifié';
+      }
+
+      // Créer la commande et la sauvegarder
+      final orderId = await _orderService.createOrder(
+        items: _cartItems,
+        shippingAddress: shippingAddress,
+        billingAddress: billingAddress,
+        paymentMethod: paymentMethodName,
+        notes: 'Commande passée depuis l\'application mobile',
+      );
+
+      // Vider le panier après commande
+      await _cartService.clearCart();
+
+      setState(() {
+        _isProcessing = false;
+      });
+
+      if (mounted) {
+        // Afficher la confirmation avec le numéro de commande
+        await _showSuccessDialog(orderId);
+      }
+    } catch (e) {
+      setState(() {
+        _isProcessing = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de la création de la commande: $e'),
+            backgroundColor: Colors.red,
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Votre commande a été passée avec succès !'),
-              const SizedBox(height: 8),
-              Text('Total: ${_finalTotal.toStringAsFixed(2)} €'),
-              const SizedBox(height: 8),
-              const Text('Vous recevrez un email de confirmation.'),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.go('/home');
-              },
-              child: const Text('Retour à l\'accueil'),
-            ),
+        );
+      }
+    }
+  }
+
+  Future<void> _showSuccessDialog(String orderId) async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.check_circle, color: Colors.green),
+            SizedBox(width: 8),
+            Text('Commande confirmée'),
           ],
         ),
-      );
-    }
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('Votre commande a été passée avec succès !'),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  const Text(
+                    'Numéro de commande:',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    orderId,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text('Total: ${_finalTotal.toStringAsFixed(2)} €'),
+            const SizedBox(height: 8),
+            const Text('Vous recevrez un email de confirmation.'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/orders');
+            },
+            child: const Text('Voir mes commandes'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/home');
+            },
+            child: const Text('Retour à l\'accueil'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

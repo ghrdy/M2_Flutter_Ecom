@@ -122,8 +122,8 @@ class Product {
       'rating': rating,
       'reviewCount': reviewCount,
       'isFeatured': isFeatured,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt.millisecondsSinceEpoch,
     };
   }
 

@@ -43,14 +43,23 @@ class Order {
     return Order(
       id: id,
       userId: data['userId'] ?? '',
-      items: (data['items'] as List<dynamic>?)
-          ?.map((item) => CartItem(
-                id: item['id'] ?? '',
-                product: Product.fromMap(item['product'], item['product']['id'] ?? ''),
-                quantity: item['quantity'] ?? 0,
-                addedAt: item['addedAt']?.toDate() ?? DateTime.now(),
-              ))
-          .toList() ?? [],
+      items:
+          (data['items'] as List<dynamic>?)
+              ?.map(
+                (item) => CartItem(
+                  id: item['id'] ?? '',
+                  product: Product.fromMap(
+                    item['product'],
+                    item['product']['id'] ?? '',
+                  ),
+                  quantity: item['quantity'] ?? 0,
+                  addedAt: item['addedAt'] is int
+                      ? DateTime.fromMillisecondsSinceEpoch(item['addedAt'])
+                      : item['addedAt']?.toDate() ?? DateTime.now(),
+                ),
+              )
+              .toList() ??
+          [],
       totalAmount: (data['totalAmount'] ?? 0.0).toDouble(),
       status: OrderStatus.values.firstWhere(
         (e) => e.toString() == 'OrderStatus.${data['status']}',
@@ -59,8 +68,14 @@ class Order {
       shippingAddress: data['shippingAddress'] ?? '',
       billingAddress: data['billingAddress'] ?? '',
       paymentMethod: data['paymentMethod'] ?? '',
-      createdAt: data['createdAt']?.toDate() ?? DateTime.now(),
-      updatedAt: data['updatedAt']?.toDate(),
+      createdAt: data['createdAt'] is int
+          ? DateTime.fromMillisecondsSinceEpoch(data['createdAt'])
+          : data['createdAt']?.toDate() ?? DateTime.now(),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] is int
+                ? DateTime.fromMillisecondsSinceEpoch(data['updatedAt'])
+                : data['updatedAt']?.toDate())
+          : null,
       trackingNumber: data['trackingNumber'],
       notes: data['notes'],
     );
@@ -69,19 +84,23 @@ class Order {
   Map<String, dynamic> toMap() {
     return {
       'userId': userId,
-      'items': items.map((item) => {
-        'id': item.id,
-        'product': item.product.toMap(),
-        'quantity': item.quantity,
-        'addedAt': item.addedAt,
-      }).toList(),
+      'items': items
+          .map(
+            (item) => {
+              'id': item.id,
+              'product': item.product.toMap(),
+              'quantity': item.quantity,
+              'addedAt': item.addedAt.millisecondsSinceEpoch,
+            },
+          )
+          .toList(),
       'totalAmount': totalAmount,
       'status': status.toString().split('.').last,
       'shippingAddress': shippingAddress,
       'billingAddress': billingAddress,
       'paymentMethod': paymentMethod,
-      'createdAt': createdAt,
-      'updatedAt': updatedAt,
+      'createdAt': createdAt.millisecondsSinceEpoch,
+      'updatedAt': updatedAt?.millisecondsSinceEpoch,
       'trackingNumber': trackingNumber,
       'notes': notes,
     };
