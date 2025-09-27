@@ -7,8 +7,6 @@ import '../lib/models/product.dart';
 
 void main() {
   group('OrderService JSON Serialization Tests', () {
-    late OrderService orderService;
-
     setUpAll(() async {
       // Setup de base pour les tests
       SharedPreferences.setMockInitialValues({});
@@ -17,7 +15,6 @@ void main() {
     setUp(() async {
       // Reset SharedPreferences before each test
       SharedPreferences.setMockInitialValues({});
-      orderService = OrderService();
     });
 
     test('should serialize and deserialize Order correctly', () async {

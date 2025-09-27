@@ -15,7 +15,11 @@ class _CartScreenState extends State<CartScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => context.read<CartViewModel>().loadCart());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<CartViewModel>().loadCart();
+      }
+    });
   }
 
   Future<void> _updateQuantity(CartItem item, int newQuantity) async {
@@ -169,14 +173,6 @@ class _CartScreenState extends State<CartScreen> {
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () => context.go('/catalog'),
-            child: const Text(
-              'Découvrir nos produits',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                letterSpacing: -0.2,
-              ),
-            ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.grey[800],
               foregroundColor: Colors.white,
@@ -185,6 +181,14 @@ class _CartScreenState extends State<CartScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               elevation: 0,
+            ),
+            child: const Text(
+              'Découvrir nos produits',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                letterSpacing: -0.2,
+              ),
             ),
           ),
         ],
@@ -250,7 +254,7 @@ class _CartScreenState extends State<CartScreen> {
         border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -455,14 +459,6 @@ class _CartScreenState extends State<CartScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () => context.go('/checkout'),
-                child: const Text(
-                  'Passer commande',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: -0.2,
-                  ),
-                ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.grey[800],
                   foregroundColor: Colors.white,
@@ -471,6 +467,14 @@ class _CartScreenState extends State<CartScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   elevation: 0,
+                ),
+                child: const Text(
+                  'Passer commande',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.2,
+                  ),
                 ),
               ),
             ),

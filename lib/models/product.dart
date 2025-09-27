@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class Product {
   final String id;
   final String name;
@@ -48,38 +50,28 @@ class Product {
   }
 
   static int _parseStock(dynamic stock) {
-    print(
-      '🔍 STOCK PARSING: Valeur reçue: $stock (type: ${stock.runtimeType})',
-    );
-
     if (stock == null) {
-      print('⚠️ STOCK PARSING: Stock est null, retour de 0');
       return 0;
     }
 
     try {
       if (stock is int) {
-        print('✅ STOCK PARSING: Stock est un int: $stock');
         return stock;
       }
       if (stock is double) {
-        print(
-          '✅ STOCK PARSING: Stock est un double: $stock, conversion en int: ${stock.toInt()}',
-        );
         return stock.toInt();
       }
       if (stock is String) {
-        print(
-          '✅ STOCK PARSING: Stock est une string: $stock, conversion en int: ${int.parse(stock)}',
-        );
         return int.parse(stock);
       }
-      print('❌ STOCK PARSING: Type non supporté: ${stock.runtimeType}');
     } catch (e) {
-      print('❌ STOCK PARSING: Erreur lors du parsing du stock: $e');
+      // Log error in debug mode only
+      assert(() {
+        debugPrint('Stock parsing error: $e');
+        return true;
+      }());
     }
 
-    print('⚠️ STOCK PARSING: Retour de 0 par défaut');
     return 0;
   }
 
@@ -104,7 +96,11 @@ class Product {
         return DateTime.fromMillisecondsSinceEpoch(timestamp);
       }
     } catch (e) {
-      print('Erreur lors du parsing de la date: $e');
+      // Log error in debug mode only
+      assert(() {
+        debugPrint('Date parsing error: $e');
+        return true;
+      }());
     }
 
     return DateTime.now();
