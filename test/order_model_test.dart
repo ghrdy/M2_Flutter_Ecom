@@ -4,22 +4,32 @@ import 'package:ecom/models/cart_item.dart';
 import 'package:ecom/models/product.dart';
 
 Product _p(String id, double price) => Product(
-      id: id,
-      name: 'P$id',
-      description: '',
-      price: price,
-      imageUrl: '',
-      category: 'C',
-      stock: 1,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+  id: id,
+  name: 'P$id',
+  description: '',
+  price: price,
+  imageUrl: '',
+  category: 'C',
+  stock: 1,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+);
 
 void main() {
   test('Order toMap/fromMap conserve les informations principales', () {
     final items = [
-      CartItem(id: 'c1', product: _p('1', 5.0), quantity: 2, addedAt: DateTime.now()),
-      CartItem(id: 'c2', product: _p('2', 3.0), quantity: 1, addedAt: DateTime.now()),
+      CartItem(
+        id: 'c1',
+        product: _p('1', 5.0),
+        quantity: 2,
+        addedAt: DateTime.now(),
+      ),
+      CartItem(
+        id: 'c2',
+        product: _p('2', 3.0),
+        quantity: 1,
+        addedAt: DateTime.now(),
+      ),
     ];
 
     final order = Order(
@@ -57,5 +67,3 @@ void main() {
     expect(restored.status, OrderStatus.pending);
   });
 }
-
-

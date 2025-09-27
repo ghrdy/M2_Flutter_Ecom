@@ -83,11 +83,17 @@ class CartItem {
         rating: (productData['rating'] ?? 0.0).toDouble(),
         reviewCount: productData['reviewCount'] ?? 0,
         isFeatured: productData['isFeatured'] ?? false,
-        createdAt: DateTime.parse(productData['createdAt'] ?? DateTime.now().toIso8601String()),
-        updatedAt: DateTime.parse(productData['updatedAt'] ?? DateTime.now().toIso8601String()),
+        createdAt: DateTime.parse(
+          productData['createdAt'] ?? DateTime.now().toIso8601String(),
+        ),
+        updatedAt: DateTime.parse(
+          productData['updatedAt'] ?? DateTime.now().toIso8601String(),
+        ),
       ),
       quantity: map['quantity'] ?? 0,
-      addedAt: DateTime.parse(map['addedAt'] ?? DateTime.now().toIso8601String()),
+      addedAt: DateTime.parse(
+        map['addedAt'] ?? DateTime.now().toIso8601String(),
+      ),
     );
   }
 }

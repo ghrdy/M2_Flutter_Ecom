@@ -89,7 +89,9 @@ String? _authGuard(BuildContext context, GoRouterState state) {
 final GoRouter appRouter = GoRouter(
   initialLocation: '/',
   redirect: _authGuard,
-  refreshListenable: GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
   routes: [
     GoRoute(path: '/', name: 'root', redirect: (context, state) => '/home'),
     GoRoute(

@@ -18,7 +18,8 @@ class _ProductList extends StatelessWidget {
             childAspectRatio: 0.75,
           ),
           itemCount: products.length,
-          itemBuilder: (context, index) => ProductCard(product: products[index]),
+          itemBuilder: (context, index) =>
+              ProductCard(product: products[index]),
         ),
       ),
     );
@@ -26,16 +27,16 @@ class _ProductList extends StatelessWidget {
 }
 
 Product _makeProduct(String id) => Product(
-      id: id,
-      name: 'Produit $id',
-      description: 'Desc',
-      price: 10 + id.hashCode % 5,
-      imageUrl: '',
-      category: 'Cat',
-      stock: 5,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+  id: id,
+  name: 'Produit $id',
+  description: 'Desc',
+  price: 10 + id.hashCode % 5,
+  imageUrl: '',
+  category: 'Cat',
+  stock: 5,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+);
 
 void main() {
   testWidgets('La liste rend toutes les ProductCard', (tester) async {
@@ -62,5 +63,3 @@ void main() {
     expect(find.text('Produit p5'), findsOneWidget);
   });
 }
-
-

@@ -26,5 +26,3 @@ void main() {
     expect(p.isFeatured, true);
   });
 }
-
-

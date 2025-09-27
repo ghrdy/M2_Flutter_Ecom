@@ -33,9 +33,7 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(
-          body: ProductCard(product: product),
-        ),
+        home: Scaffold(body: ProductCard(product: product)),
       ),
     );
 
@@ -51,10 +49,7 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: ProductCard(
-            product: product,
-            onAddToCart: () => tapped++,
-          ),
+          body: ProductCard(product: product, onAddToCart: () => tapped++),
         ),
       ),
     );
@@ -69,5 +64,3 @@ void main() {
     expect(tapped, 1);
   });
 }
-
-

@@ -4,16 +4,16 @@ import 'package:ecom/services/cart_service.dart';
 import 'package:ecom/models/product.dart';
 
 Product _p(String id, {double price = 5.0}) => Product(
-      id: id,
-      name: 'P$id',
-      description: '',
-      price: price,
-      imageUrl: '',
-      category: 'C',
-      stock: 100,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-    );
+  id: id,
+  name: 'P$id',
+  description: '',
+  price: price,
+  imageUrl: '',
+  category: 'C',
+  stock: 100,
+  createdAt: DateTime.now(),
+  updatedAt: DateTime.now(),
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,5 +58,3 @@ void main() {
     });
   });
 }
-
-
