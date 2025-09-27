@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/cart_item.dart';
-import '../services/cart_service.dart';
+import '../viewmodels/cart_view_model.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -11,70 +12,44 @@ class CartScreen extends StatefulWidget {
 }
 
 class _CartScreenState extends State<CartScreen> {
-  final CartService _cartService = CartService();
-  List<CartItem> _cartItems = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadCart();
-  }
-
-  Future<void> _loadCart() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    _cartItems = await _cartService.getItems();
-
-    setState(() {
-      _isLoading = false;
-    });
+    Future.microtask(() => context.read<CartViewModel>().loadCart());
   }
 
   Future<void> _updateQuantity(CartItem item, int newQuantity) async {
-    if (newQuantity <= 0) {
-      await _cartService.removeItem(item.product.id);
-    } else {
-      await _cartService.updateQuantity(item.product.id, newQuantity);
-    }
-    await _loadCart();
+    await context.read<CartViewModel>().updateQuantity(
+      item.product.id,
+      newQuantity,
+    );
   }
 
   Future<void> _removeItem(CartItem item) async {
-    await _cartService.removeItem(item.product.id);
-    await _loadCart();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${item.product.name} retiré du panier'),
-          backgroundColor: Colors.orange,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-    }
+    await context.read<CartViewModel>().remove(item.product.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${item.product.name} retiré du panier'),
+        backgroundColor: Colors.orange,
+        duration: const Duration(seconds: 2),
+      ),
+    );
   }
 
   Future<void> _clearCart() async {
-    await _cartService.clearCart();
-    await _loadCart();
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Panier vidé'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+    await context.read<CartViewModel>().clear();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Panier vidé'),
+        backgroundColor: Colors.red,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
-  double get _totalPrice {
-    return _cartItems.fold(0.0, (total, item) => total + item.totalPrice);
-  }
+  double get _totalPrice => context.watch<CartViewModel>().subtotal;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +74,7 @@ class _CartScreenState extends State<CartScreen> {
           onPressed: () => context.go('/home'),
         ),
         actions: [
-          if (_cartItems.isNotEmpty)
+          if (context.watch<CartViewModel>().items.isNotEmpty)
             Container(
               margin: const EdgeInsets.only(right: 12),
               decoration: BoxDecoration(
@@ -150,17 +125,19 @@ class _CartScreenState extends State<CartScreen> {
             ),
         ],
       ),
-      body: _isLoading
+      body: context.watch<CartViewModel>().isLoading
           ? const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
                 color: Colors.grey,
               ),
             )
-          : _cartItems.isEmpty
+          : context.watch<CartViewModel>().items.isEmpty
           ? _buildEmptyCart()
           : _buildCartContent(),
-      bottomNavigationBar: _cartItems.isNotEmpty ? _buildBottomBar() : null,
+      bottomNavigationBar: context.watch<CartViewModel>().items.isNotEmpty
+          ? _buildBottomBar()
+          : null,
     );
   }
 
@@ -229,7 +206,7 @@ class _CartScreenState extends State<CartScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${_cartItems.length} article(s)',
+                '${context.watch<CartViewModel>().items.length} article(s)',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
@@ -253,9 +230,9 @@ class _CartScreenState extends State<CartScreen> {
         Expanded(
           child: ListView.builder(
             padding: const EdgeInsets.all(16),
-            itemCount: _cartItems.length,
+            itemCount: context.watch<CartViewModel>().items.length,
             itemBuilder: (context, index) {
-              final item = _cartItems[index];
+              final item = context.watch<CartViewModel>().items[index];
               return _buildCartItemCard(item);
             },
           ),

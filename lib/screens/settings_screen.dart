@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/auth_view_model.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -11,20 +11,9 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final User? _user = FirebaseAuth.instance.currentUser;
-
   Future<void> _signOut() async {
-    try {
-      await GoogleSignIn.instance.signOut();
-    } catch (_) {}
-
-    try {
-      await FirebaseAuth.instance.signOut();
-    } catch (_) {}
-
-    if (mounted) {
-      context.go('/login');
-    }
+    await context.read<AuthViewModel>().signOut();
+    if (mounted) context.go('/login');
   }
 
   @override
@@ -67,7 +56,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _user?.displayName ?? 'Utilisateur',
+                    context.read<AuthViewModel>().user?.displayName ??
+                        'Utilisateur',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -75,7 +65,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _user?.email ?? 'email@example.com',
+                    context.read<AuthViewModel>().user?.email ??
+                        'email@example.com',
                     style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
                 ],

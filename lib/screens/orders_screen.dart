@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/order.dart';
-import '../services/order_service.dart';
+import '../viewmodels/orders_view_model.dart';
 
 class OrdersScreen extends StatefulWidget {
   const OrdersScreen({super.key});
@@ -11,30 +12,10 @@ class OrdersScreen extends StatefulWidget {
 }
 
 class _OrdersScreenState extends State<OrdersScreen> {
-  final OrderService _orderService = OrderService();
-  List<Order> _orders = [];
-  bool _isLoading = true;
-
   @override
   void initState() {
     super.initState();
-    _loadOrders();
-  }
-
-  Future<void> _loadOrders() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      _orders = await _orderService.getUserOrders();
-    } catch (e) {
-      print('Erreur lors du chargement des commandes: $e');
-    }
-
-    setState(() {
-      _isLoading = false;
-    });
+    Future.microtask(() => context.read<OrdersViewModel>().loadOrders());
   }
 
   String _getStatusText(OrderStatus status) {
@@ -73,6 +54,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<OrdersViewModel>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Mes commandes'),
@@ -83,10 +65,10 @@ class _OrdersScreenState extends State<OrdersScreen> {
           onPressed: () => context.go('/home'),
         ),
         actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loadOrders),
+          IconButton(icon: const Icon(Icons.refresh), onPressed: vm.loadOrders),
         ],
       ),
-      body: _isLoading ? _buildLoadingState() : _buildContent(),
+      body: vm.isLoading ? _buildLoadingState() : _buildContent(vm),
     );
   }
 
@@ -94,18 +76,18 @@ class _OrdersScreenState extends State<OrdersScreen> {
     return const Center(child: CircularProgressIndicator());
   }
 
-  Widget _buildContent() {
-    if (_orders.isEmpty) {
+  Widget _buildContent(OrdersViewModel vm) {
+    if (vm.orders.isEmpty) {
       return _buildEmptyState();
     }
 
     return RefreshIndicator(
-      onRefresh: _loadOrders,
+      onRefresh: vm.loadOrders,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: _orders.length,
+        itemCount: vm.orders.length,
         itemBuilder: (context, index) {
-          final order = _orders[index];
+          final order = vm.orders[index];
           return _buildOrderCard(order);
         },
       ),

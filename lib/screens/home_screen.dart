@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
-import '../services/cart_service.dart';
-import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
+import '../viewmodels/catalog_view_model.dart';
+import '../viewmodels/cart_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,9 +15,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
-  final CartService _cartService = CartService();
-  final ProductService _productService = ProductService();
-
   List<Product> _featuredProducts = [];
   bool _isLoading = true;
   AnimationController? _animationController;
@@ -26,8 +24,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     _initializeAnimations();
-    _loadFeaturedProducts();
-    _cartService.loadCart();
+    Future.microtask(() async {
+      final vm = context.read<CatalogViewModel>();
+      await vm.loadFeaturedProducts();
+      setState(() {
+        _featuredProducts = vm.featured;
+        _isLoading = vm.isLoading;
+      });
+      await context.read<CartViewModel>().loadCart();
+    });
   }
 
   void _initializeAnimations() {
@@ -47,58 +52,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  Future<void> _loadFeaturedProducts() async {
-    try {
-      print('🏠 HOME: Début du chargement des produits...');
-
-      // D'abord, essayons de récupérer TOUS les produits
-      print('🔍 Tentative de récupération de TOUS les produits...');
-      final allProducts = await _productService.getProducts();
-      print('📦 TOUS les produits: ${allProducts.length}');
-
-      for (var product in allProducts) {
-        print('📦 - ${product.name} (Featured: ${product.isFeatured})');
-      }
-
-      // Ensuite les produits featured
-      print('⭐ Tentative de récupération des produits featured...');
-      final featuredProducts = await _productService.getFeaturedProducts();
-      print('⭐ Produits featured: ${featuredProducts.length}');
-
-      // Si pas de featured, on prend les premiers produits
-      final productsToShow = featuredProducts.isNotEmpty
-          ? featuredProducts
-          : allProducts.take(6).toList();
-
-      print('🏠 HOME: Produits à afficher: ${productsToShow.length}');
-
-      for (var product in productsToShow) {
-        print('🏠 HOME: - ${product.name} (${product.price}€)');
-      }
-
-      setState(() {
-        _featuredProducts = productsToShow;
-        _isLoading = false;
-      });
-
-      print('🏠 HOME: État mis à jour, loading = false');
-    } catch (e, stackTrace) {
-      print('❌ HOME: Erreur lors du chargement des produits: $e');
-      print('📍 HOME: Stack trace: $stackTrace');
-      setState(() {
-        _featuredProducts = [];
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors du chargement: $e'),
-            backgroundColor: Colors.red,
-            duration: Duration(seconds: 5),
-          ),
-        );
-      }
-    }
+  Future<void> _reloadFeatured() async {
+    final vm = context.read<CatalogViewModel>();
+    setState(() => _isLoading = true);
+    await vm.loadFeaturedProducts();
+    setState(() {
+      _featuredProducts = vm.featured;
+      _isLoading = false;
+    });
   }
 
   @override
@@ -299,12 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ElevatedButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isLoading = true;
-                                });
-                                _loadFeaturedProducts();
-                              },
+                              onPressed: _reloadFeatured,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.blue,
                                 foregroundColor: Colors.white,
@@ -318,7 +274,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   '🔧 DEBUG: Collection utilisée: produits',
                                 );
                                 print(
-                                  '🔧 DEBUG: Firebase connecté: ${_productService.toString()}',
+                                  '🔧 DEBUG: Firebase connecté: ${context.read<CatalogViewModel>().toString()}',
                                 );
                               },
                               child: const Text('🔧 Debug'),
@@ -349,26 +305,25 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           product: product,
                           onTap: () => context.go('/product/${product.id}'),
                           onAddToCart: () async {
-                            await _cartService.addItem(product, 1);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    '${product.name} ajouté au panier',
-                                  ),
-                                  backgroundColor: Colors.green,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  action: SnackBarAction(
-                                    label: 'Voir',
-                                    textColor: Colors.white,
-                                    onPressed: () => context.go('/cart'),
-                                  ),
+                            await context.read<CartViewModel>().add(product, 1);
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  '${product.name} ajouté au panier',
                                 ),
-                              );
-                            }
+                                backgroundColor: Colors.green,
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                action: SnackBarAction(
+                                  label: 'Voir',
+                                  textColor: Colors.white,
+                                  onPressed: () => context.go('/cart'),
+                                ),
+                              ),
+                            );
                           },
                         ),
                       );

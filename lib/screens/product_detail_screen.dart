@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
-import '../services/cart_service.dart';
-import '../services/product_service.dart';
+import '../viewmodels/catalog_view_model.dart';
+import '../viewmodels/cart_view_model.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
@@ -14,8 +15,6 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  final CartService _cartService = CartService();
-  final ProductService _productService = ProductService();
   Product? _product;
   bool _isLoading = true;
   int _quantity = 1;
@@ -32,7 +31,9 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     });
 
     try {
-      _product = await _productService.getProductById(widget.productId);
+      _product = await context.read<CatalogViewModel>().loadProductById(
+        widget.productId,
+      );
 
       setState(() {
         _isLoading = false;
@@ -57,7 +58,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   Future<void> _addToCart() async {
     if (_product != null) {
-      await _cartService.addItem(_product!, _quantity);
+      await context.read<CartViewModel>().add(_product!, _quantity);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

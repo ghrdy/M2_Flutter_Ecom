@@ -8,18 +8,43 @@ permissions:
   contents: read
   pull-requests: write
 jobs:
-  build_and_preview:
+  test_and_preview:
     if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: "stable"
           cache: true
-      - run: flutter pub get && flutter build web --release
-      - uses: FirebaseExtended/action-hosting-deploy@v0
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Format check
+        run: flutter format --set-exit-if-changed .
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Run tests with coverage
+        run: flutter test --coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          file: coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: Build web app
+        run: flutter build web --release
+
+      - name: Deploy preview to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_M2FLUTTER_1D466 }}

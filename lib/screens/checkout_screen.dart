@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../models/cart_item.dart';
-import '../services/cart_service.dart';
-import '../services/order_service.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/checkout_view_model.dart';
 
 class CheckoutScreen extends StatefulWidget {
   const CheckoutScreen({super.key});
@@ -12,8 +11,6 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final CartService _cartService = CartService();
-  final OrderService _orderService = OrderService();
   final _formKey = GlobalKey<FormState>();
 
   // Contrôleurs pour les champs de formulaire
@@ -24,15 +21,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _postalCodeController = TextEditingController();
   final _phoneController = TextEditingController();
 
-  List<CartItem> _cartItems = [];
   bool _isLoading = true;
-  bool _isProcessing = false;
   String _selectedPaymentMethod = 'card';
 
   @override
   void initState() {
     super.initState();
-    _loadCart();
+    Future.microtask(() async {
+      await context.read<CheckoutViewModel>().loadCart();
+      if (mounted) setState(() => _isLoading = false);
+    });
   }
 
   @override
@@ -46,43 +44,22 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  Future<void> _loadCart() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    _cartItems = await _cartService.getItems();
-
-    setState(() {
-      _isLoading = false;
-    });
-  }
-
-  double get _totalPrice {
-    return _cartItems.fold(0.0, (total, item) => total + item.totalPrice);
-  }
-
-  double get _shippingCost {
-    return _totalPrice > 50 ? 0.0 : 5.99;
-  }
-
-  double get _finalTotal {
-    return _totalPrice + _shippingCost;
-  }
+  double get _totalPrice => context.watch<CheckoutViewModel>().subtotal;
+  double get _shippingCost => context.read<CheckoutViewModel>().shippingCost(
+    freeFrom: 50.0,
+    cost: 5.99,
+  );
+  double get _finalTotal =>
+      context.read<CheckoutViewModel>().total(freeFrom: 50.0, cost: 5.99);
 
   Future<void> _processOrder() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    setState(() {
-      _isProcessing = true;
-    });
+    // VM gère l'état de processing
 
     try {
-      // Simulation du traitement de la commande
-      await Future.delayed(const Duration(seconds: 2));
-
       // Construire l'adresse complète
       final shippingAddress =
           '${_nameController.text}\n'
@@ -108,31 +85,21 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethodName = 'Non spécifié';
       }
 
-      // Créer la commande et la sauvegarder
-      final orderId = await _orderService.createOrder(
-        items: _cartItems,
+      // Créer la commande via VM
+      final orderId = await context.read<CheckoutViewModel>().placeOrder(
         shippingAddress: shippingAddress,
         billingAddress: billingAddress,
         paymentMethod: paymentMethodName,
         notes: 'Commande passée depuis l\'application mobile',
       );
 
-      // Vider le panier après commande
-      await _cartService.clearCart();
-
-      setState(() {
-        _isProcessing = false;
-      });
-
       if (mounted) {
         // Afficher la confirmation avec le numéro de commande
-        await _showSuccessDialog(orderId);
+        if (orderId != null) {
+          await _showSuccessDialog(orderId);
+        }
       }
     } catch (e) {
-      setState(() {
-        _isProcessing = false;
-      });
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -212,6 +179,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final vm = context.watch<CheckoutViewModel>();
     if (_isLoading) {
       return Scaffold(
         appBar: AppBar(
@@ -227,7 +195,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       );
     }
 
-    if (_cartItems.isEmpty) {
+    if (vm.items.isEmpty) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Commande'),
@@ -269,7 +237,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Résumé de la commande
-              _buildOrderSummary(),
+              _buildOrderSummary(vm),
               const SizedBox(height: 24),
 
               // Informations de livraison
@@ -281,7 +249,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               const SizedBox(height: 24),
 
               // Total et bouton de commande
-              _buildOrderTotal(),
+              _buildOrderTotal(vm),
             ],
           ),
         ),
@@ -289,7 +257,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildOrderSummary() {
+  Widget _buildOrderSummary(CheckoutViewModel vm) {
     return Card(
       elevation: 2,
       child: Padding(
@@ -302,7 +270,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            ..._cartItems.map(
+            ...vm.items.map(
               (item) => Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -556,7 +524,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  Widget _buildOrderTotal() {
+  Widget _buildOrderTotal(CheckoutViewModel vm) {
     return Column(
       children: [
         Container(
@@ -588,8 +556,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: _isProcessing ? null : _processOrder,
-            icon: _isProcessing
+            onPressed: vm.isProcessing ? null : _processOrder,
+            icon: vm.isProcessing
                 ? const SizedBox(
                     width: 20,
                     height: 20,
@@ -600,7 +568,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   )
                 : const Icon(Icons.payment),
             label: Text(
-              _isProcessing ? 'Traitement...' : 'Confirmer la commande',
+              vm.isProcessing ? 'Traitement...' : 'Confirmer la commande',
             ),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.green,

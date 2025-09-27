@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../models/product.dart';
-import '../services/cart_service.dart';
-import '../services/product_service.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
+import '../viewmodels/catalog_view_model.dart';
+import '../viewmodels/cart_view_model.dart';
 
 class CatalogScreen extends StatefulWidget {
   const CatalogScreen({super.key});
@@ -14,21 +15,7 @@ class CatalogScreen extends StatefulWidget {
 }
 
 class _CatalogScreenState extends State<CatalogScreen> {
-  final CartService _cartService = CartService();
-  final ProductService _productService = ProductService();
   final TextEditingController _searchController = TextEditingController();
-
-  List<Product> _allProducts = [];
-  List<Product> _filteredProducts = [];
-  bool _isLoading = true;
-  String _selectedCategory = 'Tous';
-  List<String> _categories = ['Tous'];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadProducts();
-  }
 
   @override
   void dispose() {
@@ -36,79 +23,21 @@ class _CatalogScreenState extends State<CatalogScreen> {
     super.dispose();
   }
 
-  Future<void> _loadProducts() async {
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      // Charger les produits depuis Firestore
-      _allProducts = await _productService.getProducts();
-
-      // Charger les catégories dynamiquement
-      final categories = await _productService.getCategories();
-      _categories = ['Tous', ...categories];
-
-      _filteredProducts = _allProducts;
-
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Erreur lors du chargement des produits: $e');
-      setState(() {
-        _allProducts = [];
-        _filteredProducts = [];
-        _isLoading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erreur lors du chargement: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  void _filterProducts() {
-    setState(() {
-      _filteredProducts = _allProducts.where((product) {
-        final matchesSearch =
-            product.name.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            ) ||
-            product.description.toLowerCase().contains(
-              _searchController.text.toLowerCase(),
-            );
-        final matchesCategory =
-            _selectedCategory == 'Tous' ||
-            product.category == _selectedCategory;
-
-        return matchesSearch && matchesCategory;
-      }).toList();
-    });
-  }
-
   Future<void> _addToCart(Product product) async {
-    await _cartService.addItem(product, 1);
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${product.name} ajouté au panier'),
-          backgroundColor: Colors.green,
-          duration: const Duration(seconds: 2),
-          action: SnackBarAction(
-            label: 'Voir le panier',
-            textColor: Colors.white,
-            onPressed: () => context.go('/cart'),
-          ),
+    await context.read<CartViewModel>().add(product, 1);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} ajouté au panier'),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 2),
+        action: SnackBarAction(
+          label: 'Voir le panier',
+          textColor: Colors.white,
+          onPressed: () => context.go('/cart'),
         ),
-      );
-    }
+      ),
+    );
   }
 
   @override
@@ -182,7 +111,8 @@ class _CatalogScreenState extends State<CatalogScreen> {
                         vertical: 16,
                       ),
                     ),
-                    onChanged: (value) => _filterProducts(),
+                    onChanged: (value) =>
+                        context.read<CatalogViewModel>().search(value),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -191,19 +121,20 @@ class _CatalogScreenState extends State<CatalogScreen> {
                   height: 45,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
-                    itemCount: _categories.length,
+                    itemCount: context
+                        .watch<CatalogViewModel>()
+                        .categories
+                        .length,
                     itemBuilder: (context, index) {
-                      final category = _categories[index];
-                      final isSelected = _selectedCategory == category;
+                      final vm = context.watch<CatalogViewModel>();
+                      final category = vm.categories[index];
+                      final isSelected = vm.selectedCategory == category;
 
                       return Container(
                         margin: const EdgeInsets.only(right: 12),
                         child: GestureDetector(
                           onTap: () {
-                            setState(() {
-                              _selectedCategory = category;
-                            });
-                            _filterProducts();
+                            vm.selectCategory(category);
                           },
                           child: Container(
                             padding: const EdgeInsets.symmetric(
@@ -245,12 +176,12 @@ class _CatalogScreenState extends State<CatalogScreen> {
 
           // Liste des produits
           Expanded(
-            child: _isLoading
+            child: context.watch<CatalogViewModel>().isLoading
                 ? const Padding(
                     padding: EdgeInsets.all(20),
                     child: ShimmerLoading(),
                   )
-                : _filteredProducts.isEmpty
+                : context.watch<CatalogViewModel>().products.isEmpty
                 ? Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -296,9 +227,14 @@ class _CatalogScreenState extends State<CatalogScreen> {
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
-                    itemCount: _filteredProducts.length,
+                    itemCount: context
+                        .watch<CatalogViewModel>()
+                        .products
+                        .length,
                     itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
+                      final product = context
+                          .watch<CatalogViewModel>()
+                          .products[index];
                       return ProductCard(
                         product: product,
                         onTap: () => context.go('/product/${product.id}'),
