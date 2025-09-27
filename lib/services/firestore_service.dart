@@ -124,7 +124,7 @@ class FirestoreService {
             .collection(_productsCollection)
             .get();
         for (var doc in allSnapshot.docs) {
-          final data = doc.data() as Map<String, dynamic>;
+          final data = doc.data();
           print(
             '🔍 FIRESTORE: ${doc.id} -> isFeatured: ${data['isFeatured']} (type: ${data['isFeatured'].runtimeType})',
           );

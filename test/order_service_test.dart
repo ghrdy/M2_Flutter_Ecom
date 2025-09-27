@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../lib/services/order_service.dart';
 import '../lib/models/order.dart';
 import '../lib/models/cart_item.dart';
 import '../lib/models/product.dart';
