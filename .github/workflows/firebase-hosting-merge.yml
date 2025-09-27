@@ -22,7 +22,7 @@ jobs:
         run: flutter pub get
 
       - name: Format check
-        run: dart format --set-exit-if-changed .
+        run: dart format --set-exit-if-changed . || (echo "Code formatting issues found. Please run 'dart format .' locally and commit the changes." && exit 1)
 
       - name: Analyze code
         run: flutter analyze
