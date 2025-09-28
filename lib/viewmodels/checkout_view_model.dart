@@ -40,16 +40,20 @@ class CheckoutViewModel extends ChangeNotifier {
     required String billingAddress,
     required String paymentMethod,
     String? notes,
+    double freeFrom = 50.0,
+    double cost = 5.99,
   }) async {
     if (_items.isEmpty) return null;
     _setProcessing(true);
     try {
+      final shippingCostValue = shippingCost(freeFrom: freeFrom, cost: cost);
       final orderId = await _orderService.createOrder(
         items: _items,
         shippingAddress: shippingAddress,
         billingAddress: billingAddress,
         paymentMethod: paymentMethod,
         notes: notes,
+        shippingCost: shippingCostValue,
       );
       await _cartService.clearCart();
       await loadCart();

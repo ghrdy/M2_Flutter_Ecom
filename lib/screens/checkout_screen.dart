@@ -85,18 +85,23 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           paymentMethodName = 'Non spécifié';
       }
 
+      // Calculer le total AVANT de passer la commande
+      final totalAmount = _finalTotal;
+
       // Créer la commande via VM
       final orderId = await context.read<CheckoutViewModel>().placeOrder(
         shippingAddress: shippingAddress,
         billingAddress: billingAddress,
         paymentMethod: paymentMethodName,
         notes: 'Commande passée depuis l\'application mobile',
+        freeFrom: 50.0,
+        cost: 5.99,
       );
 
       if (mounted) {
-        // Afficher la confirmation avec le numéro de commande
+        // Afficher la confirmation avec le numéro de commande et le bon total
         if (orderId != null) {
-          await _showSuccessDialog(orderId);
+          await _showSuccessDialog(orderId, totalAmount);
         }
       }
     } catch (e) {
@@ -111,7 +116,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  Future<void> _showSuccessDialog(String orderId) async {
+  Future<void> _showSuccessDialog(String orderId, double totalAmount) async {
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -152,7 +157,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            Text('Total: ${_finalTotal.toStringAsFixed(2)} €'),
+            Text('Total: ${totalAmount.toStringAsFixed(2)} €'),
             const SizedBox(height: 8),
             const Text('Vous recevrez un email de confirmation.'),
           ],

@@ -84,10 +84,15 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      // On peut conserver la logique existante, le ViewModel expose signOut/état
-      // mais ici Google sign-in est conservé localement pour limiter l'ampleur.
-      // À factoriser plus tard si besoin.
-      // (Pas de changement fonctionnel requis pour MVVM léger)
+      final cred = await context.read<AuthViewModel>().signInWithGoogle();
+      if (cred == null) {
+        // Connexion annulée ou échouée
+        final errorMessage = context.read<AuthViewModel>().errorMessage;
+        if (errorMessage.isNotEmpty) {
+          _errorText = errorMessage;
+        }
+        return;
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -99,7 +104,9 @@ class _LoginScreenState extends State<LoginScreen> {
         context.go('/home');
       }
     } catch (e) {
-      _errorText = 'Erreur lors de la connexion Google: ${e.toString()}';
+      _errorText = context.read<AuthViewModel>().errorMessage.isNotEmpty
+          ? context.read<AuthViewModel>().errorMessage
+          : 'Erreur lors de la connexion Google: ${e.toString()}';
     } finally {
       if (mounted) {
         setState(() {

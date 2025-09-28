@@ -17,6 +17,7 @@ class OrderService {
     required String billingAddress,
     required String paymentMethod,
     String? notes,
+    double shippingCost = 0.0,
   }) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -27,11 +28,14 @@ class OrderService {
       throw Exception('Le panier est vide');
     }
 
-    // Calculer le montant total
-    final totalAmount = items.fold<double>(
+    // Calculer le sous-total des produits
+    final subtotal = items.fold<double>(
       0.0,
       (total, item) => total + (item.product.price * item.quantity),
     );
+
+    // Calculer le montant total incluant la livraison
+    final totalAmount = subtotal + shippingCost;
 
     // Générer un ID unique pour la commande
     final orderId =
