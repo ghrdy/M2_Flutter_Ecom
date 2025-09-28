@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/pwa_install_button.dart';
 import '../viewmodels/catalog_view_model.dart';
 import '../viewmodels/cart_view_model.dart';
 
@@ -109,6 +110,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                               Row(
                                 children: [
+                                  const PWAInstallIconButton(
+                                    iconColor: Colors.black87,
+                                  ),
+                                  const SizedBox(width: 8),
                                   _buildHeaderButton(
                                     icon: Icons.shopping_cart_outlined,
                                     onPressed: () => context.go('/cart'),
@@ -145,6 +150,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           const Text(
                             'Technologie de pointe et design exceptionnel',
                             style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                          const SizedBox(height: 16),
+                          const PWAInstallButton(
+                            text: 'Installer l\'app',
+                            icon: Icons.download_rounded,
+                            backgroundColor: Color(0xFF667eea),
                           ),
                           const SizedBox(height: 20),
                         ],

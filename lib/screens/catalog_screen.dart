@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../models/product.dart';
 import '../widgets/product_card.dart';
 import '../widgets/loading_widget.dart';
+import '../widgets/pwa_install_button.dart';
 import '../viewmodels/catalog_view_model.dart';
 import '../viewmodels/cart_view_model.dart';
 
@@ -64,8 +65,9 @@ class _CatalogScreenState extends State<CatalogScreen> {
           onPressed: () => context.go('/home'),
         ),
         actions: [
+          const PWAInstallIconButton(iconColor: Colors.black87),
           Container(
-            margin: const EdgeInsets.only(right: 16),
+            margin: const EdgeInsets.only(right: 16, left: 8),
             decoration: BoxDecoration(
               color: Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
