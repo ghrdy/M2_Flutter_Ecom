@@ -28,7 +28,7 @@ jobs:
         run: flutter analyze --no-fatal-infos
 
       - name: Run tests with coverage
-        run: flutter test --coverage
+        run: flutter test
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
